@@ -35,7 +35,7 @@ Void
 (÷ 2 3)  # division (Unicodepoint 00F7)
 
 # type annotation names?
-# [] || {} <> int float string intern boolean codeform symbol
+# [] || {} <> int float str intern boolean codeform symbol
 
 # regex literals??
 /fooo*/ /barr?/

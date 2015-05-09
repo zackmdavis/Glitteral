@@ -2,7 +2,7 @@ import logging
 import os
 import re
 
-IDENTIFIER = re.compile(r"[-A-Za-zλ_]+$")
+IDENTIFIER = re.compile(r"[-A-Za-z:λ_]+$")
 
 logger = logging.getLogger(__name__)
 if os.environ.get("GLITTERAL_DEBUG"):
@@ -48,6 +48,16 @@ class Deflambda(Keyword):
 
 class Identifier(Token):
     recognizer = IDENTIFIER
+
+
+class TypeSpecifier(Keyword):
+    ...
+
+class IntegerSpecifer(TypeSpecifier):
+    recognizer = re.compile(r":int$")
+
+class StringSpecifier(TypeSpecifier):
+    recognizer = re.compile(r":str$")
 
 
 class OpenDelimiter(Token):
@@ -150,15 +160,22 @@ class BaseLexer:
                     self._handle_tokenizing_error(self.sight, candidate)
         return self.tokens
 
-KEYWORDS = [If, Lambda, Def, Deflambda]
-TOKENCLASSES = KEYWORDS + [Identifier,
-                           OpenParenthesis, CloseParenthesis,
-                           OpenBracket, CloseBracket,
-                           OpenBrace, CloseBrace,
-                           StringLiteral, InternLiteral,
-                           IntegerLiteral,
-                           EndOfFile]
+BASE_KEYWORDS = [If, Lambda, Def, Deflambda]
+TYPE_SPECIFIERS = [IntegerSpecifer, StringSpecifier]
+TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
+    Identifier,
+    OpenParenthesis, CloseParenthesis,
+    OpenBracket, CloseBracket,
+    OpenBrace, CloseBrace,
+    StringLiteral, InternLiteral,
+    IntegerLiteral,
+    EndOfFile
+]
 
 class Lexer(BaseLexer):
     def __init__(self):
         super().__init__(TOKENCLASSES)
+
+
+def lex(source):
+    return Lexer().tokenize(source)
