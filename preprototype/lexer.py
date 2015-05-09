@@ -2,7 +2,7 @@ import logging
 import os
 import re
 
-IDENTIFIER = re.compile(r"[-A-Za-z_]+$")
+IDENTIFIER = re.compile(r"[-A-Za-zλ_]+$")
 
 logger = logging.getLogger(__name__)
 if os.environ.get("GLITTERAL_DEBUG"):
@@ -29,8 +29,26 @@ class Token:
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.value)
 
+
+class Keyword(Token):
+    ...
+
+class If(Keyword):
+    recognizer = re.compile(r"if$")
+
+class Lambda(Keyword):
+    recognizer = re.compile(r"λ$")
+
+class Def(Keyword):
+    recognizer = re.compile(r"def$")
+
+class Deflambda(Keyword):
+    recognizer = re.compile(r"defλ$")
+
+
 class Identifier(Token):
     recognizer = IDENTIFIER
+
 
 class OpenDelimiter(Token):
     ...
@@ -44,6 +62,19 @@ class OpenParenthesis(OpenDelimiter):
 class CloseParenthesis(CloseDelimiter):
     recognizer = re.compile(r"\)$")
 
+class OpenBracket(OpenDelimiter):
+    recognizer = re.compile(r"\[$")
+
+class CloseBracket(CloseDelimiter):
+    recognizer = re.compile(r"\]$")
+
+class OpenBrace(OpenDelimiter):
+    recognizer = re.compile(r"\{$")
+
+class CloseBrace(CloseDelimiter):
+    recognizer = re.compile(r"\}$")
+
+
 class StringLiteral(Token):
     prefix_recognizer = re.compile(r'"[^"]*$')
     recognizer = re.compile(r'".*"$')
@@ -52,19 +83,29 @@ class InternLiteral(Token):
     prefix_recognizer = re.compile(r"'[^']*$")
     recognizer = re.compile(r"'.*'$")
 
+
 class IntegerLiteral(Token):
     recognizer = re.compile(r"\d+$")
+
 
 class EndOfFile(Token):
     recognizer = re.compile(r"█$")
 
+
 class TokenizingException(ValueError):
     ...
 
-class BaseTokenizer:
+class BaseLexer:
     def __init__(self, tokenclasses):
         self.tokenclasses = tokenclasses
         self.tokens = []
+
+    def chomp_and_resynchronize(self):
+        self.tokens.append(self.sight[0])
+        self.candidate_start = self.candidate_end - 1
+        while self.source[self.candidate_start] in ' \n\t':
+            self.candidate_start += 1  # skip whitespace
+        self.candidate_end = self.candidate_start + 1
 
     @staticmethod
     def _handle_tokenizing_error(sight, candidate):
@@ -76,19 +117,19 @@ class BaseTokenizer:
             raise TokenizingException(
                 "Ambiguous input: {} are tied as the longest "
                 "tokenizations of {}".format(
-                    ', '.join(sight), candidate)
+                    ', '.join(map(str, sight)), candidate)
             )
 
     def tokenize(self, source):
-        source += '█'  # end-of-file sentinel
-        candidate_start = 0
-        candidate_end = 1
-        sight = []
-        while candidate_end <= len(source):
-            candidate = source[candidate_start:candidate_end]
+        self.source = source + '█'  # end-of-file sentinel
+        self.candidate_start = 0
+        self.candidate_end = 1
+        self.sight = []
+        while self.candidate_end <= len(self.source):
+            candidate = self.source[self.candidate_start:self.candidate_end]
             logger.debug("Entering tokenization loop for '%s' "
                          "with candidate indices %s:%s",
-                         candidate, candidate_start, candidate_end)
+                         candidate, self.candidate_start, self.candidate_end)
             premonition = list(filter(
                 lambda x: x,
                 [tokenclass.match(candidate)
@@ -96,22 +137,28 @@ class BaseTokenizer:
             ))
             logger.debug("Premonition: %s", premonition)
             if premonition:
-                sight = premonition
-                candidate_end += 1
+                self.sight = premonition
+                self.candidate_end += 1
             else:
-                if len(sight) == 1 and isinstance(sight[0], Token):
-                    self.tokens.append(sight[0])
-                    candidate_start = candidate_end - 1
-                    while source[candidate_start] in ' \n\t':
-                        candidate_start += 1  # skip whitespace
-                    candidate_end = candidate_start + 1
+                if len(self.sight) == 1 and isinstance(self.sight[0], Token):
+                    self.chomp_and_resynchronize()
+                elif any(isinstance(t, Keyword) for t in self.sight):
+                    self.sight = [t for t in self.sight
+                                  if isinstance(t, Keyword)]
+                    self.chomp_and_resynchronize()
                 else:
-                    self._handle_tokenizing_error(sight, candidate)
+                    self._handle_tokenizing_error(self.sight, candidate)
         return self.tokens
 
-TOKENCLASSES = [Identifier, OpenParenthesis, CloseParenthesis,
-                StringLiteral, InternLiteral, IntegerLiteral, EndOfFile]
+KEYWORDS = [If, Lambda, Def, Deflambda]
+TOKENCLASSES = KEYWORDS + [Identifier,
+                           OpenParenthesis, CloseParenthesis,
+                           OpenBracket, CloseBracket,
+                           OpenBrace, CloseBrace,
+                           StringLiteral, InternLiteral,
+                           IntegerLiteral,
+                           EndOfFile]
 
-class Tokenizer(BaseTokenizer):
+class Lexer(BaseLexer):
     def __init__(self):
         super().__init__(TOKENCLASSES)

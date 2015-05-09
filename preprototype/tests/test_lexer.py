@@ -22,15 +22,20 @@ class TokenClassMatchingTest(unittest.TestCase):
                         set(legitimates.values()) - {tokenclass}):
                     self.assertIsNone(mismatching_tokenclass.match(token))
 
-class TokenizerTest(unittest.TestCase):
+class LexerTest(unittest.TestCase):
 
     def test_tokenize_codeform(self):
         self.assertEqual(
-            Tokenizer().tokenize("(foo 'bar' \"quux\" 3)"),
+            Lexer().tokenize("(foo 'bar' \"quux\" 3)"),
             [OpenParenthesis("("), Identifier("foo"),
              InternLiteral("'bar'"), StringLiteral('"quux"'),
              IntegerLiteral("3"), CloseParenthesis(")")]
         )
+
+    def test_recognize_keyword(self):
+        self.assertEqual(Lexer().tokenize("def"),
+                         [Def("def")])
+
 
 if __name__ == "__main__":
     unittest.main()
