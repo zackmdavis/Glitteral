@@ -13,8 +13,8 @@
 "foo" # string
 
 # Sequentials
-["foo", "bar", "quux"]  # list (mutable) 
-|"foo", "bar", "quux"|  # vector (immutable) 
+["foo" "bar" "quux"]  # list (mutable) 
+|"foo" "bar" "quux"|  # vector (immutable) 
 
 # Mappings
 {'foo' 1; 'bar' 2; 'quux' 3;}  # dictionary (mutable) 
