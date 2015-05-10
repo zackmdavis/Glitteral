@@ -121,6 +121,7 @@ class BaseLexer:
 
     def chomp_and_resynchronize(self):
         self.tokens.append(self.sight[0])
+        self.sight = []
         self.candidate_start = self.candidate_end - 1
         while self.source[self.candidate_start] in ' \n\t':
             self.candidate_start += 1  # skip whitespace
