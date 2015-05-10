@@ -1,2 +1,2 @@
-(def a 1)
+(def a 1)  # This is a comment.
 (print_integer a)

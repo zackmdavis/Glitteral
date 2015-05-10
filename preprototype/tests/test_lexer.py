@@ -36,6 +36,12 @@ class LexerTest(unittest.TestCase):
         self.assertEqual(Lexer().tokenize("def"),
                          [Def("def")])
 
+    def test_commentary(self):
+        self.assertEqual(
+            Lexer().tokenize("foo # This is a comment.\n2"),
+            [Identifier("foo"), Commentary(), IntegerLiteral("2")]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -98,6 +98,13 @@ class InternLiteral(Token):
 class IntegerLiteral(Token):
     recognizer = re.compile(r"\d+$")
 
+class Commentary(Token):
+    def __init__(self, *_):
+        # it's not meant for us; don't even bother reading it
+        self.representation = ''
+
+    prefix_recognizer = re.compile(r"#.*$")
+    recognizer = re.compile(r"#.*\n$")
 
 class EndOfFile(Token):
     recognizer = re.compile(r"█$")
@@ -170,6 +177,7 @@ TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
     OpenBrace, CloseBrace,
     StringLiteral, InternLiteral,
     IntegerLiteral,
+    Commentary,
     EndOfFile
 ]
 

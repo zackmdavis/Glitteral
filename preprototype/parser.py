@@ -103,6 +103,8 @@ def parse_codeform(tokenstream):
 
 def parse_expression(tokenstream):
     leading_token = next(tokenstream)
+    while isinstance(leading_token, Commentary):
+        leading_token = next(tokenstream)
 
     if isinstance(leading_token, OpenParenthesis):
         return parse_codeform(push(tokenstream, leading_token))
