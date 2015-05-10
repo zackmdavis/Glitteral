@@ -15,6 +15,7 @@ class TokenClassMatchingTest(unittest.TestCase):
             "'rocketry'": InternLiteral,
             "2015": IntegerLiteral,
             "^int": IntegerSpecifer,
+            "|": Pipe
         }
         for token, tokenclass in legitimates.items():
             with self.subTest(token=token):

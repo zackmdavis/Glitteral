@@ -13,6 +13,12 @@ class Expression:
 class Codeform(Expression):
     ...
 
+class NamedFunctionDefinition(Codeform):
+    def __init__(self, name, arguments, expressions):
+        self.name = name
+        self.arguments = arguments
+        self.expressions = expressions
+
 class Definition(Codeform):
     def __init__(self, identifier, identified):
         self.identifier = identifier
@@ -47,12 +53,32 @@ class Application(Codeform):
             self.function.value, ' '.join(repr(arg) for arg in self.arguments)
         )
 
+
+class Sequential(Expression):
+    def __init__(self, elements):
+        self.elements = elements
+
+    def __repr__(self):
+        return "<{}: {}{}{}>".format(
+            self.__class__.__name__,
+            self.open_delimiter, ' '.join(repr(el) for el in self.elements),
+            self.close_delimiter
+        )
+
+class List(Sequential):
+    open_delimiter = '['
+    close_delimiter = ']'
+
+class Vector(Sequential):
+    open_delimiter = close_delimiter = '|'
+
+
 class Atom(Expression):
     def __init__(self, value):
         self.value = value
 
     def __repr__(self):
-        return str(self.value)
+        return "<{}: {}>".format(self.__class__.__name__, self.value)
 
 class IntegerAtom(Atom):
     ...
@@ -109,6 +135,30 @@ def parse_codeform(tokenstream):
                 raise ParsingException("First argument to definition must be "
                                        "identifier.")
             return Definition(*rest)
+        elif first.value == ":=λ":
+            ...
+
+def parse_sequential(tokenstream):
+    open_delimiter = next(tokenstream)
+    if not (isinstance(open_delimiter, SequentialDelimiter) or
+            not isinstance(open_delimiter, OpenDelimiter)):
+        raise ParsingException("Expected an opening sequential delimiter ('[' "
+                               "or '|'), got {}".format(open_delimiter))
+    if isinstance(open_delimiter, OpenBracket):
+        sequential_class = List
+    elif isinstance(open_delimiter, Pipe):
+        sequential_class = Vector
+    elements = []
+    done_here = False
+    # TODO: unify this loop with its analogue in parse_codeform?
+    while not done_here:
+        next_token = next(tokenstream)
+        if (isinstance(next_token, SequentialDelimiter) and
+            isinstance(next_token, CloseDelimiter)):
+            done_here = True
+        else:
+            elements.append(parse_expression(push(tokenstream, next_token)))
+    return sequential_class(elements)
 
 
 def parse_expression(tokenstream):

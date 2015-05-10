@@ -70,11 +70,13 @@ class IntegerSpecifer(TypeSpecifier):
 class StringSpecifier(TypeSpecifier):
     recognizer = re.compile(r"\^str$")
 
-
 class OpenDelimiter(Token):
     ...
 
 class CloseDelimiter(Token):
+    ...
+
+class SequentialDelimiter(Token):
     ...
 
 class OpenParenthesis(OpenDelimiter):
@@ -83,10 +85,10 @@ class OpenParenthesis(OpenDelimiter):
 class CloseParenthesis(CloseDelimiter):
     recognizer = re.compile(r"\)$")
 
-class OpenBracket(OpenDelimiter):
+class OpenBracket(SequentialDelimiter, OpenDelimiter):
     recognizer = re.compile(r"\[$")
 
-class CloseBracket(CloseDelimiter):
+class CloseBracket(SequentialDelimiter, CloseDelimiter):
     recognizer = re.compile(r"\]$")
 
 class OpenBrace(OpenDelimiter):
@@ -95,6 +97,8 @@ class OpenBrace(OpenDelimiter):
 class CloseBrace(CloseDelimiter):
     recognizer = re.compile(r"\}$")
 
+class Pipe(SequentialDelimiter, OpenDelimiter, CloseDelimiter):
+    recognizer = re.compile(r"\|$")
 
 class StringLiteral(Token):
     prefix_recognizer = re.compile(r'"[^"]*$')
@@ -200,6 +204,7 @@ TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
     OpenParenthesis, CloseParenthesis,
     OpenBracket, CloseBracket,
     OpenBrace, CloseBrace,
+    Pipe,
     StringLiteral, InternLiteral,
     IntegerLiteral,
     BooleanLiteral, VoidLiteral,
