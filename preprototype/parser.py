@@ -24,6 +24,10 @@ class Definition(Codeform):
             self.identifier, self.identified
         )
 
+    def emit_code(self):
+        return "let {} = {};\n".format(
+            self.identifier.emit_code(), self.identified.emit_code())
+
 class Conditional(Codeform):
     def __init__(self, condition, consequent, alternative=None):
         self.condition = condition
@@ -34,6 +38,12 @@ class Conditional(Codeform):
         return "<{}: ({}, {}/{})>".format(
             self.__class__.__name__,
             self.condition, self.consequent, self.alternative
+        )
+
+    def emit_code(self):
+        return "if %s { %s } else { %s }\n" % (
+            self.condition.emit_code(), self.consequent.emit_code(),
+            self.alternative.emit_code()
         )
 
 class FunctionApplication(Codeform):
@@ -47,6 +57,11 @@ class FunctionApplication(Codeform):
             self.function.value, ' '.join(repr(arg) for arg in self.arguments)
         )
 
+    def emit_code(self):
+        return "{}({})".format(
+            self.function.undername,
+            ', '.join(arg.emit_code() for arg in self.arguments)
+        )
 
 class Atom(Expression):
     def __init__(self, value):
@@ -56,13 +71,20 @@ class Atom(Expression):
         return str(self.value)
 
 class IntegerAtom(Atom):
-    ...
+    def emit_code(self):
+        return "{}isize".format(self.value)
 
 class StringAtom(Atom):
-    ...
+    def emit_code(self):
+        return "\"{}\"".format(self.value)
 
 class IdentifierAtom(Atom):
-    ...
+    @property
+    def undername(self):
+        return self.emit_code()
+
+    def emit_code(self):
+        return "{}".format(self.value)
 
 class PrimitiveAtom(Atom):
     ...
