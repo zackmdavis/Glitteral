@@ -66,6 +66,10 @@ class IdentifierAtom(Atom):
 class PrimitiveAtom(Atom):
     ...
 
+class BuiltinAtom(Atom):
+    # maybe distinguish builtin functions from ordinary identifiers?
+    ...
+
 class ParsingException(Exception):
     ...
 

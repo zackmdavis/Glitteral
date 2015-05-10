@@ -19,7 +19,8 @@ def generate_application(application):
         ', '.join(generate_expression(arg) for arg in application.arguments)
     )
 
-environment = {}  # XXX!?
+environment = {'+': "add_integers", '−': "subtract_integers",
+               '⋅': "multiply_integers", '÷': "divide_integers"}
 
 def generate_expression(expression):
     global environment
@@ -40,7 +41,17 @@ def generate_expression(expression):
             return '"{}"'.format(expression.value)
 
 def generate_code(expressions):
-    return ("fn print_integer(n: isize) { println!(\"{}\", n) }\n"
-            "fn main() { %s }" %
-            '\n'.join(generate_expression(expression)
-                      for expression in expressions))
+    return """
+#![allow(dead_code)]
+
+fn add_integers(a: isize, b: isize) -> isize { a + b }
+fn subtract_integers(a: isize, b: isize) -> isize { a - b }
+fn multiply_integers(a: isize, b: isize) -> isize { a * b }
+fn divide_integers(a: isize, b: isize) -> isize { a / b }
+fn print_integer(n: isize) { println!(\"{}\", n) }
+
+fn main() {
+%s
+}
+""" % '\n'.join(generate_expression(expression)
+                for expression in expressions)

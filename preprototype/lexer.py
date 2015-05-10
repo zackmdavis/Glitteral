@@ -36,7 +36,7 @@ class Token:
                                  self.representation)
 
 
-IDENTIFIER_CHARCLASS = r"[-A-Za-z:λ_]"
+IDENTIFIER_CHARCLASS = r"[-A-Za-z_:λ+−⋅÷]"
 
 
 class Keyword(Token):

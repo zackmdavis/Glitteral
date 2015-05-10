@@ -1,2 +1,3 @@
 (:= a 1)  # This is a comment.
-(print_integer a)
+(:= b 2)  # This, also, is a comment.
+(print_integer (+ (⋅ b b) a))
