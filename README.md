@@ -1,8 +1,19 @@
 ## the Glitteral programming language 
 
-### (in speculative pre-development)
+#### (in speculative pre-development)
 
 *sparkling, vague dreams of a future programming language*
+
+### Demonstration
+
+```
+$ cat demo.gltrl 
+(def a 1)
+(print_integer a)
+$ ./glitteral demo.gltrl 
+$ ./demo 
+1
+```
 
 #### "design document" (daydreaming)
 

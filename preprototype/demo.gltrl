@@ -1,0 +1,2 @@
+(def a 1)
+(print_integer a)

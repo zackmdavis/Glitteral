@@ -102,10 +102,7 @@ def parse_codeform(tokenstream):
 
 
 def parse_expression(tokenstream):
-    try:
-        leading_token = next(tokenstream)
-    except StopIteration:
-        return None
+    leading_token = next(tokenstream)
 
     if isinstance(leading_token, OpenParenthesis):
         return parse_codeform(push(tokenstream, leading_token))
@@ -119,3 +116,12 @@ def parse_expression(tokenstream):
             return StringAtom(expression_token.representation.strip('"'))
         elif isinstance(expression_token, Identifier):
             return IdentifierAtom(expression_token.representation)
+
+def parse(tokenstream):
+    expressions = []
+    while True:  # XXX this is awful
+        try:
+            expressions.append(parse_expression(tokenstream))
+        except StopIteration:
+            break
+    return expressions

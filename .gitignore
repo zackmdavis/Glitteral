@@ -1,2 +1,4 @@
 __pycache__/
 *.html
+demo
+__glitteral_compiled.rs
