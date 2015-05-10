@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import sys
 import subprocess
@@ -9,11 +10,33 @@ from parser import parse
 from backend import generate_code
 
 if __name__ == "__main__":
-    source_name = sys.argv[1]
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('source_name', help="file to compile")
+    arg_parser.add_argument('--just-rust', action='store_true',
+                            help="print generated Rust, but don't compile")
+    args = arg_parser.parse_args()
+
+    source_name = args.source_name
+    if not source_name.endswith(".gltrl"):
+        print("Glitteral source files must have the .gltrl extension.")
+        sys.exit(1)
     output_name = source_name[:-6]  # less ".gltrl"
     with open(sys.argv[1]) as source_file:
         source = source_file.read()
+
+    generated_code = generate_code(parse(lex(source)))
+    if args.just_rust:
+        print(generated_code)
+        sys.exit(0)
+
     with open("__glitteral_compiled.rs", 'w') as code_file:
-        code_file.write(generate_code(parse(lex(source))))
-    subprocess.check_call(['rustc', '__glitteral_compiled.rs',
-                           '--crate-name', output_name])
+        code_file.write(generated_code)
+    exit_code = subprocess.call(
+        ['rustc',
+         '--allow', "dead_code",
+         '--allow', "non_snake_case",
+         '--allow', "unused_variables",
+         '--crate-name', output_name,
+         "__glitteral_compiled.rs"]
+    )
+    sys.exit(exit_code)

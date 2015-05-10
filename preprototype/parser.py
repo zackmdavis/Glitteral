@@ -60,6 +60,12 @@ class IntegerAtom(Atom):
 class StringAtom(Atom):
     ...
 
+class BooleanAtom(Atom):
+    ...
+
+class VoidAtom(Atom):
+    ...
+
 class IdentifierAtom(Atom):
     ...
 
@@ -120,6 +126,12 @@ def parse_expression(tokenstream):
             return IntegerAtom(int(leading_token.representation))
         elif isinstance(expression_token, StringLiteral):
             return StringAtom(expression_token.representation.strip('"'))
+        elif isinstance(expression_token, BooleanLiteral):
+            return (BooleanAtom(True)
+                    if expression_token.representation == "Truth"
+                    else BooleanAtom(False))
+        elif isinstance(expression_token, VoidLiteral):
+            return VoidLiteral(None)
         elif isinstance(expression_token, Identifier):
             return IdentifierAtom(expression_token.representation)
 

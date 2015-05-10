@@ -14,7 +14,7 @@ class TokenClassMatchingTest(unittest.TestCase):
             '"romance"': StringLiteral,
             "'rocketry'": InternLiteral,
             "2015": IntegerLiteral,
-            "^int": IntegerSpecifer
+            "^int": IntegerSpecifer,
         }
         for token, tokenclass in legitimates.items():
             with self.subTest(token=token):
@@ -37,6 +37,13 @@ class LexerTest(unittest.TestCase):
     def test_recognize_keyword(self):
         self.assertEqual(Lexer().tokenize(":="),
                          [Def(":=")])
+
+    def test_recognize_booleans(self):
+        for boolean in ("Truth", "Falsity"):
+            self.assertEqual(
+                Lexer().tokenize(boolean),
+                [BooleanLiteral(boolean)]
+            )
 
     def test_recognize_type_specifier(self):
         self.assertEqual(Lexer().tokenize("^int"), [IntegerSpecifer("^int")])

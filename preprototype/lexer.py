@@ -38,8 +38,10 @@ class Token:
 
 IDENTIFIER_CHARCLASS = r"[-A-Za-z_:λ+−⋅÷]"
 
+class Reserved(Token):
+    ...
 
-class Keyword(Token):
+class Keyword(Reserved):
     ...
 
 class If(Keyword):
@@ -59,7 +61,7 @@ class Identifier(Token):
     recognizer = re.compile("{}+$".format(IDENTIFIER_CHARCLASS))
 
 
-class TypeSpecifier(Keyword):
+class TypeSpecifier(Reserved):
     prefix_recognizer = re.compile(r"\^{}*$".format(IDENTIFIER_CHARCLASS))
 
 class IntegerSpecifer(TypeSpecifier):
@@ -102,9 +104,15 @@ class InternLiteral(Token):
     prefix_recognizer = re.compile(r"'[^']*$")
     recognizer = re.compile(r"'.*'$")
 
-
 class IntegerLiteral(Token):
     recognizer = re.compile(r"\d+$")
+
+class BooleanLiteral(Reserved):
+    recognizer = re.compile(r"(?:Truth)$|(?:Falsity)$")
+
+class VoidLiteral(Reserved):
+    recognizer = re.compile(r"Void")
+
 
 class Commentary(Token):
     def __init__(self, *_):
@@ -174,11 +182,11 @@ class BaseLexer:
                 if len(self.sight) == 1 and isinstance(self.sight[0], Token):
                     # Match!
                     self.chomp_and_resynchronize()
-                elif any(isinstance(t, Keyword) for t in self.sight):
-                    # Multimatch but one is a language keyword and
-                    # takes priority!
+                elif any(isinstance(t, Reserved) for t in self.sight):
+                    # Multimatch but one is one of the langague's
+                    # reserved words and takes priority!
                     self.sight = [t for t in self.sight
-                                  if isinstance(t, Keyword)]
+                                  if isinstance(t, Reserved)]
                     self.chomp_and_resynchronize()
                 else:
                     # No match or erroneous multimatch!
@@ -194,6 +202,7 @@ TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
     OpenBrace, CloseBrace,
     StringLiteral, InternLiteral,
     IntegerLiteral,
+    BooleanLiteral, VoidLiteral,
     Commentary,
     EndOfFile
 ]

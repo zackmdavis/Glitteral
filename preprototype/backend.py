@@ -37,13 +37,13 @@ def generate_expression(expression):
                 environment.get(expression.value, expression.value))
         elif isinstance(expression, IntegerAtom):
             return "{}isize".format(expression.value)
+        elif isinstance(expression, BooleanAtom):
+            return "true" if expression.value else "false"
         elif isinstance(expression, StringAtom):
             return '"{}"'.format(expression.value)
 
 def generate_code(expressions):
     return """
-#![allow(dead_code)]
-
 fn add_integers(a: isize, b: isize) -> isize { a + b }
 fn subtract_integers(a: isize, b: isize) -> isize { a - b }
 fn multiply_integers(a: isize, b: isize) -> isize { a * b }
