@@ -2,12 +2,15 @@ import logging
 import os
 import re
 
-IDENTIFIER = re.compile(r"[-A-Za-z:λ_]+$")
+from collections import namedtuple
 
 logger = logging.getLogger(__name__)
 if os.environ.get("GLITTERAL_DEBUG"):
     logger.setLevel(logging.DEBUG)
     logger.addHandler(logging.StreamHandler())
+
+PartiallyMatchedSubtoken = namedtuple('PartiallyMatchedSubtoken',
+                                      ('tokenclass', 'representation'))
 
 class Token:
     def __init__(self, representation):
@@ -19,7 +22,8 @@ class Token:
             return cls(source_fragment)
         elif getattr(cls, 'prefix_recognizer',
                      re.compile('$^')).match(source_fragment):
-            return True  # not a valid match, but the prefix of one
+            return PartiallyMatchedSubtoken(
+                cls.__name__, source_fragment)
         else:
             return None
 
@@ -30,6 +34,9 @@ class Token:
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__,
                                  self.representation)
+
+
+IDENTIFIER_CHARCLASS = r"[-A-Za-z:λ_]"
 
 
 class Keyword(Token):
@@ -45,21 +52,21 @@ class Def(Keyword):
     recognizer = re.compile(r":=$")
 
 class Deflambda(Keyword):
-    recognizer = re.compile(r"λ:=$")
+    recognizer = re.compile(r":=λ$")
 
 
 class Identifier(Token):
-    recognizer = IDENTIFIER
+    recognizer = re.compile("{}+$".format(IDENTIFIER_CHARCLASS))
 
 
 class TypeSpecifier(Keyword):
-    ...
+    prefix_recognizer = re.compile(r"\^{}*$".format(IDENTIFIER_CHARCLASS))
 
 class IntegerSpecifer(TypeSpecifier):
-    recognizer = re.compile(r":int$")
+    recognizer = re.compile(r"\^int$")
 
 class StringSpecifier(TypeSpecifier):
-    recognizer = re.compile(r":str$")
+    recognizer = re.compile(r"\^str$")
 
 
 class OpenDelimiter(Token):
@@ -160,13 +167,21 @@ class BaseLexer:
                 self.sight = premonition
                 self.candidate_end += 1
             else:
+                # With an empty premonition, we lose all hope for
+                # partially-matched subtokens.
+                self.sight = [visible for visible in self.sight
+                              if isinstance(visible, Token)]
                 if len(self.sight) == 1 and isinstance(self.sight[0], Token):
+                    # Match!
                     self.chomp_and_resynchronize()
                 elif any(isinstance(t, Keyword) for t in self.sight):
+                    # Multimatch but one is a language keyword and
+                    # takes priority!
                     self.sight = [t for t in self.sight
                                   if isinstance(t, Keyword)]
                     self.chomp_and_resynchronize()
                 else:
+                    # No match or erroneous multimatch!
                     self._handle_tokenizing_error(self.sight, candidate)
         return self.tokens
 

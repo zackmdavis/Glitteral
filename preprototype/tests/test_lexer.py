@@ -14,6 +14,7 @@ class TokenClassMatchingTest(unittest.TestCase):
             '"romance"': StringLiteral,
             "'rocketry'": InternLiteral,
             "2015": IntegerLiteral,
+            "^int": IntegerSpecifer
         }
         for token, tokenclass in legitimates.items():
             with self.subTest(token=token):
@@ -26,8 +27,9 @@ class LexerTest(unittest.TestCase):
 
     def test_tokenize_codeform(self):
         self.assertEqual(
-            Lexer().tokenize("(foo 'bar' \"quux\" 3)"),
+            Lexer().tokenize("(foo ^str 'bar' \"quux\" 3)"),
             [OpenParenthesis("("), Identifier("foo"),
+             StringSpecifier("^str"),
              InternLiteral("'bar'"), StringLiteral('"quux"'),
              IntegerLiteral("3"), CloseParenthesis(")")]
         )
@@ -35,6 +37,10 @@ class LexerTest(unittest.TestCase):
     def test_recognize_keyword(self):
         self.assertEqual(Lexer().tokenize(":="),
                          [Def(":=")])
+
+    def test_recognize_type_specifier(self):
+        self.assertEqual(Lexer().tokenize("^int"), [IntegerSpecifer("^int")])
+        self.assertEqual(Lexer().tokenize("^str"), [StringSpecifier("^str")])
 
     def test_commentary(self):
         self.assertEqual(
