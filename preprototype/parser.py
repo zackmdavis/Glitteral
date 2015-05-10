@@ -92,7 +92,7 @@ def parse_codeform(tokenstream):
                 raise ParsingException("Conditional expression must have 2 or "
                                        "3 arguments.")
             return Conditional(*rest)
-        elif first.value == "def":
+        elif first.value == ":=":
             if len(rest) != 2:
                 raise ParsingException("Definition must have 2 arguments.")
             if not isinstance(rest[0], IdentifierAtom):

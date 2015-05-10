@@ -8,7 +8,7 @@
 
 ```
 $ cat demo.gltrl 
-(def a 1)  # This is a comment.
+(:= a 1)  # This is a comment.
 (print_integer a)
 $ ./glitteral demo.gltrl 
 $ ./demo 

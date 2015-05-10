@@ -24,7 +24,8 @@ class Token:
             return None
 
     def __eq__(self, other):
-        return self.representation == other.representation
+        return (self.__class__ == other.__class__ and
+                self.representation == other.representation)
 
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__,
@@ -41,10 +42,10 @@ class Lambda(Keyword):
     recognizer = re.compile(r"λ$")
 
 class Def(Keyword):
-    recognizer = re.compile(r"def$")
+    recognizer = re.compile(r":=$")
 
 class Deflambda(Keyword):
-    recognizer = re.compile(r"defλ$")
+    recognizer = re.compile(r"λ:=$")
 
 
 class Identifier(Token):

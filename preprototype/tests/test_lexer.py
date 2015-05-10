@@ -33,8 +33,8 @@ class LexerTest(unittest.TestCase):
         )
 
     def test_recognize_keyword(self):
-        self.assertEqual(Lexer().tokenize("def"),
-                         [Def("def")])
+        self.assertEqual(Lexer().tokenize(":="),
+                         [Def(":=")])
 
     def test_commentary(self):
         self.assertEqual(
