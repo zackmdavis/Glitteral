@@ -10,8 +10,8 @@ if os.environ.get("GLITTERAL_DEBUG"):
     logger.addHandler(logging.StreamHandler())
 
 class Token:
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, representation):
+        self.representation = representation
 
     @classmethod
     def match(cls, source_fragment):
@@ -24,10 +24,11 @@ class Token:
             return None
 
     def __eq__(self, other):
-        return self.value == other.value
+        return self.representation == other.representation
 
     def __repr__(self):
-        return "<{}: {}>".format(self.__class__.__name__, self.value)
+        return "<{}: {}>".format(self.__class__.__name__,
+                                 self.representation)
 
 
 class Keyword(Token):
@@ -178,4 +179,4 @@ class Lexer(BaseLexer):
 
 
 def lex(source):
-    return Lexer().tokenize(source)
+    return iter(Lexer().tokenize(source))
