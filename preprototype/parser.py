@@ -194,11 +194,10 @@ def parse_expression(tokenstream):
             return parse_sequential(push(tokenstream, leading_token))
     else:  # atoms
         expression_token = leading_token
-        if isinstance(expression_token, Reserved):
-            if isinstance(expression_token, TypeSpecifier):
-                return TypeSpecifierAtom(expression_token.representation)
-            else:
-                return PrimitiveAtom(expression_token.representation)
+        if isinstance(expression_token, Keyword):
+            return PrimitiveAtom(expression_token.representation)
+        if isinstance(expression_token, TypeSpecifier):
+            return TypeSpecifierAtom(expression_token.representation)
         elif isinstance(expression_token, IntegerLiteral):
             return IntegerAtom(int(leading_token.representation))
         elif isinstance(expression_token, StringLiteral):

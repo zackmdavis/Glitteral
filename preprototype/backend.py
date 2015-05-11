@@ -1,5 +1,29 @@
 from parser import *  # tell it to somepony who cares
 
+logger = logging.getLogger(__name__)
+if os.environ.get("GLITTERAL_DEBUG"):
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(logging.StreamHandler())
+
+
+def rustify_type_specifier(type_specifier_atom):
+    return {'^int': "isize", '^str': "&str"}.get(type_specifier_atom.value)
+
+def rustify_argument(argument):
+    return "{}: {}".format(
+        argument.name.value, rustify_type_specifier(argument.type))
+
+def generate_named_function_definition(definition):
+    return """fn %s(%s) -> %s {
+%s
+}
+""" % (definition.name.value,
+       ', '.join(rustify_argument(arg) for arg in definition.arguments),
+       rustify_type_specifier(definition.return_type),
+       '\n'.join(
+           generate_expression(expression)
+           for expression in definition.expressions))
+
 def generate_definition(definition):
     return "let {} = {};".format(
         generate_expression(definition.identifier),
@@ -25,7 +49,9 @@ environment = {'+': "add_integers", '−': "subtract_integers",
 def generate_expression(expression):
     global environment
     if isinstance(expression, Codeform):
-        if isinstance(expression, Definition):
+        if isinstance(expression, NamedFunctionDefinition):
+            return generate_named_function_definition(expression)
+        elif isinstance(expression, Definition):
             return generate_definition(expression)
         elif isinstance(expression, Conditional):
             return generate_conditional(expression)
@@ -43,6 +69,7 @@ def generate_expression(expression):
             return '"{}"'.format(expression.value)
 
 def generate_code(expressions):
+    logger.debug("expressions for which to generate code: %s", expressions)
     return """
 fn add_integers(a: isize, b: isize) -> isize { a + b }
 fn subtract_integers(a: isize, b: isize) -> isize { a - b }
