@@ -1,4 +1,8 @@
-(:= a 1)  # This is a comment.
-(:= b 2)  # This, also, is a comment.
-(:= Glitteral_is_splendid Truth)
-(print_integer (+ (⋅ b b) a))
+(:= glitteral_is_splendid Truth)
+
+(:=λ first_plus_square_of_second [a ^int b ^int] → ^int 
+  (+ a (⋅ b b)))  # This is a comment.
+
+(if glitteral_is_splendid
+  (print_integer (first_plus_square_of_second 1 2))
+  (print_integer 0))
