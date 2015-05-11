@@ -56,6 +56,8 @@ class Def(Keyword):
 class Deflambda(Keyword):
     recognizer = re.compile(r":=λ$")
 
+class Arrow(Keyword):
+    recognizer = re.compile(r"→$")
 
 class Identifier(Token):
     recognizer = re.compile("{}+$".format(IDENTIFIER_CHARCLASS))
@@ -160,6 +162,9 @@ class BaseLexer:
             )
 
     def tokenize(self, source):
+        # XXX TODO FIXME: trailing newlines are being lexed as part of
+        # the token representation!! Workaround: always end lines with
+        # a trailing space?!
         self.source = source + '█'  # end-of-file sentinel
         self.candidate_start = 0
         self.candidate_end = 1
@@ -198,7 +203,7 @@ class BaseLexer:
         return self.tokens
 
 BASE_KEYWORDS = [If, Lambda, Def, Deflambda]
-TYPE_SPECIFIERS = [IntegerSpecifer, StringSpecifier]
+TYPE_SPECIFIERS = [IntegerSpecifer, StringSpecifier, Arrow]
 TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
     Identifier,
     OpenParenthesis, CloseParenthesis,

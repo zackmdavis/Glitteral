@@ -1,5 +1,7 @@
+from collections import namedtuple
+
 from lexer import *  # yeah, yeah
-from utils import push
+from utils import push, twopartitions
 
 logger = logging.getLogger(__name__)
 if os.environ.get("GLITTERAL_DEBUG"):
@@ -13,11 +15,23 @@ class Expression:
 class Codeform(Expression):
     ...
 
+Argument = namedtuple('Argument', ('name', 'type'))
+
 class NamedFunctionDefinition(Codeform):
-    def __init__(self, name, arguments, expressions):
+    def __init__(self, name, argument_sequential, return_type, expressions):
         self.name = name
-        self.arguments = arguments
+        self.arguments = [Argument(name, type_specifier)
+                          for name, type_specifier
+                          in twopartitions(argument_sequential.elements)]
+        self.return_type = return_type
         self.expressions = expressions
+
+    def __repr__(self):
+        return "<{}: {}({}) → {}>".format(
+            self.__class__.__name__,
+            self.name, self.arguments,
+            self.return_type
+        )
 
 class Definition(Codeform):
     def __init__(self, identifier, identified):
@@ -98,6 +112,9 @@ class IdentifierAtom(Atom):
 class PrimitiveAtom(Atom):
     ...
 
+class TypeSpecifierAtom(PrimitiveAtom):
+    ...
+
 class BuiltinAtom(Atom):
     # maybe distinguish builtin functions from ordinary identifiers?
     ...
@@ -136,7 +153,10 @@ def parse_codeform(tokenstream):
                                        "identifier.")
             return Definition(*rest)
         elif first.value == ":=λ":
-            ...
+            # TODO: error checking
+            name, argument_sequential, _arrow, return_type, *expressions = rest
+            return NamedFunctionDefinition(
+                name, argument_sequential, return_type, expressions)
 
 def parse_sequential(tokenstream):
     open_delimiter = next(tokenstream)
@@ -166,12 +186,19 @@ def parse_expression(tokenstream):
     while isinstance(leading_token, Commentary):
         leading_token = next(tokenstream)
 
-    if isinstance(leading_token, OpenParenthesis):
-        return parse_codeform(push(tokenstream, leading_token))
-    else:
+    if isinstance(leading_token, OpenDelimiter):  # collections
+        if isinstance(leading_token, OpenParenthesis):
+            return parse_codeform(push(tokenstream, leading_token))
+        elif (isinstance(leading_token, OpenBracket) or
+            isinstance(leading_token, Pipe)):
+            return parse_sequential(push(tokenstream, leading_token))
+    else:  # atoms
         expression_token = leading_token
-        if isinstance(expression_token, Keyword):
-            return PrimitiveAtom(expression_token.representation)
+        if isinstance(expression_token, Reserved):
+            if isinstance(expression_token, TypeSpecifier):
+                return TypeSpecifierAtom(expression_token.representation)
+            else:
+                return PrimitiveAtom(expression_token.representation)
         elif isinstance(expression_token, IntegerLiteral):
             return IntegerAtom(int(leading_token.representation))
         elif isinstance(expression_token, StringLiteral):
