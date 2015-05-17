@@ -56,6 +56,18 @@ class Conditional(Codeform):
             self.condition, self.consequent, self.alternative
         )
 
+class DeterminateIteration(Codeform):
+    def __init__(self, index_identifier, iterable, body):
+        self.index_identifier = index_identifier
+        self.iterable = iterable
+        self.body = body
+
+    def __repr__(self):
+        return "<{}: [{} {}]>".format(
+            self.__class__.__name__,
+            self.index_identifier, self.iterable
+        )
+
 class Application(Codeform):
     def __init__(self, function, arguments):
         self.function = function
@@ -157,6 +169,10 @@ def parse_codeform(tokenstream):
             name, argument_sequential, _arrow, return_type, *expressions = rest
             return NamedFunctionDefinition(
                 name, argument_sequential, return_type, expressions)
+        elif first.value == "for":
+            bindings, *body = rest
+            index_identifier, iterable = bindings.elements
+            return DeterminateIteration(index_identifier, iterable, body)
 
 def parse_sequential(tokenstream):
     open_delimiter = next(tokenstream)

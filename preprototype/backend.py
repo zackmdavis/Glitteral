@@ -37,6 +37,17 @@ def generate_conditional(conditional):
         generate_expression(conditional.alternative)
     )
 
+def generate_determinate_iteration(iteration):
+    return "for &%s in %s.iter() { %s }" % (
+        tuple(map(generate_expression,
+                  (iteration.index_identifier, iteration.iterable))) +
+                   # XXX hideous
+                   ('\n'.join(
+                       generate_expression(expression)
+                       for expression in iteration.body
+                   ),)
+    )
+
 def generate_application(application):
     return "{}({})".format(
         generate_expression(application.function),  # XX
@@ -65,6 +76,8 @@ def generate_expression(expression):
             return generate_definition(expression)
         elif isinstance(expression, Conditional):
             return generate_conditional(expression)
+        elif isinstance(expression, DeterminateIteration):
+            return generate_determinate_iteration(expression)
         elif isinstance(expression, Application):
             return generate_application(expression)
     if isinstance(expression, Sequential):

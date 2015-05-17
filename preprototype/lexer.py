@@ -47,6 +47,9 @@ class Keyword(Reserved):
 class If(Keyword):
     recognizer = re.compile(r"if$")
 
+class For(Keyword):
+    recognizer = re.compile(r"for$")
+
 class Lambda(Keyword):
     recognizer = re.compile(r"λ$")
 
@@ -203,7 +206,7 @@ class BaseLexer:
                     self._handle_tokenizing_error(self.sight, candidate)
         return self.tokens
 
-BASE_KEYWORDS = [If, Lambda, Def, Deflambda]
+BASE_KEYWORDS = [If, For, Lambda, Def, Deflambda]
 TYPE_SPECIFIERS = [IntegerSpecifer, StringSpecifier, Arrow]
 TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
     Identifier,

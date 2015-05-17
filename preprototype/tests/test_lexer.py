@@ -68,6 +68,16 @@ class LexerTest(unittest.TestCase):
             [IntegerLiteral("2"), Identifier("bar"), Identifier("quux")]
         )
 
+    def test_tokenize_determinate_iteration(self):
+        self.assertEqual(
+            Lexer().tokenize("""(for [i (range 10)] (print i))"""),
+            [OpenParenthesis("("), For("for"), OpenBracket("["), Identifier("i"),
+             OpenParenthesis("("), Identifier("range"), IntegerLiteral("10"),
+             CloseParenthesis(")"), CloseBracket("]"), OpenParenthesis("("),
+             Identifier("print"), Identifier("i"), CloseParenthesis(")"),
+             CloseParenthesis(")")]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
