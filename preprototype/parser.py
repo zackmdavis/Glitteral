@@ -10,7 +10,7 @@ if os.environ.get("GLITTERAL_DEBUG"):
 
 
 class Expression:
-    ...
+    mutable = False  # unless otherwise overridden
 
 class Codeform(Expression):
     ...
@@ -92,6 +92,7 @@ class Sequential(Expression):
         )
 
 class List(Sequential):
+    mutable = True
     open_delimiter = '['
     close_delimiter = ']'
 
@@ -102,6 +103,13 @@ class Vector(Sequential):
 class Atom(Expression):
     def __init__(self, value):
         self.value = value
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.value == other.value)
+
+    def __hash__(self):
+        return hash(self.value)
 
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.value)
