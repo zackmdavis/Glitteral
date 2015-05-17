@@ -46,6 +46,16 @@ def generate_application(application):
 environment = {'+': "add_integers", '−': "subtract_integers",
                '⋅': "multiply_integers", '÷': "divide_integers"}
 
+def generate_sequential(expression):
+    type_to_delimiter = {List: ('vec![', ']'), Vector: ('[', ']')}
+    open_delimiter, close_delimiter = type_to_delimiter[expression.__class__]
+    return ''.join(
+        [open_delimiter,
+         ', '.join(generate_expression(element)
+                   for element in expression.elements),
+         close_delimiter]
+    )
+
 def generate_expression(expression):
     global environment
     if isinstance(expression, Codeform):
@@ -57,6 +67,8 @@ def generate_expression(expression):
             return generate_conditional(expression)
         elif isinstance(expression, Application):
             return generate_application(expression)
+    if isinstance(expression, Sequential):
+        return generate_sequential(expression)
     elif isinstance(expression, Atom):
         if isinstance(expression, IdentifierAtom):
             return "{}".format(
