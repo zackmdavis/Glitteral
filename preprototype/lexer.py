@@ -117,7 +117,7 @@ class BooleanLiteral(Reserved):
     recognizer = re.compile(r"(?:Truth)$|(?:Falsity)$")
 
 class VoidLiteral(Reserved):
-    recognizer = re.compile(r"Void")
+    recognizer = re.compile(r"Void$")
 
 
 class Commentary(Token):

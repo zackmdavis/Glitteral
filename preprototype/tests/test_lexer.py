@@ -46,6 +46,9 @@ class LexerTest(unittest.TestCase):
                 [BooleanLiteral(boolean)]
             )
 
+    def test_recognize_void(self):
+        self.assertEqual(Lexer().tokenize("Void"), [VoidLiteral("Void")])
+
     def test_recognize_arrow(self):
         self.assertEqual(Lexer().tokenize('→'), [Arrow('→')])
 
