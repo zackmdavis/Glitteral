@@ -59,6 +59,12 @@ class LexerTest(unittest.TestCase):
             [Identifier("foo"), Commentary(), IntegerLiteral("2")]
         )
 
+    def test_trailing_newline(self):
+        self.assertEqual(
+            Lexer().tokenize("2 bar\nquux"),
+            [IntegerLiteral("2"), Identifier("bar"), Identifier("quux")]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

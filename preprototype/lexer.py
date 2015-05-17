@@ -141,7 +141,11 @@ class BaseLexer:
         self.tokens = []
 
     def chomp_and_resynchronize(self):
-        self.tokens.append(self.sight[0])
+        matched = self.sight[0]
+        # contemptibly, '$' can also match "just before the newline at
+        # the end of the string"
+        matched.representation = matched.representation.rstrip('\n')
+        self.tokens.append(matched)
         self.sight = []
         self.candidate_start = self.candidate_end - 1
         while self.source[self.candidate_start] in ' \n\t':
@@ -162,9 +166,6 @@ class BaseLexer:
             )
 
     def tokenize(self, source):
-        # XXX TODO FIXME: trailing newlines are being lexed as part of
-        # the token representation!! Workaround: always end lines with
-        # a trailing space?!
         self.source = source + '█'  # end-of-file sentinel
         self.candidate_start = 0
         self.candidate_end = 1
