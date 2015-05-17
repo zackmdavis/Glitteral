@@ -38,6 +38,13 @@ def generate_definition(definition, **kwargs):
         generate_expression(definition.identified)
     )
 
+def generate_subscript_assignment(assignment, **kwargs):
+    return "{}[{}] = {};".format(
+        assignment.collection_identifier.value,
+        assignment.key.value,  # XXX: I'm overusing the word "value"
+        generate_expression(assignment.value)
+    )
+
 def generate_conditional(conditional, **kwargs):
     return "if %s { %s } else { %s }" % (
         generate_expression(conditional.condition),
@@ -96,6 +103,9 @@ def generate_expression(expression, *, statementlike=False):
                 expression, statementlike=False)
         elif isinstance(expression, Definition):
             return generate_definition(
+                expression, statementlike=False)
+        elif isinstance(expression, SubscriptAssignment):
+            return generate_subscript_assignment(
                 expression, statementlike=False)
         elif isinstance(expression, Conditional):
             return generate_conditional(

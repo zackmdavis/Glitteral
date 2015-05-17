@@ -56,6 +56,9 @@ class Lambda(Keyword):
 class Def(Keyword):
     recognizer = re.compile(r":=$")
 
+class SubscriptDef(Keyword):
+    recognizer = re.compile(r"_:=$")
+
 class Deflambda(Keyword):
     recognizer = re.compile(r":=λ$")
 
@@ -206,7 +209,7 @@ class BaseLexer:
                     self._handle_tokenizing_error(self.sight, candidate)
         return self.tokens
 
-BASE_KEYWORDS = [If, For, Lambda, Def, Deflambda]
+BASE_KEYWORDS = [If, For, Lambda, Def, SubscriptDef, Deflambda]
 TYPE_SPECIFIERS = [IntegerSpecifer, StringSpecifier, Arrow]
 TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
     Identifier,

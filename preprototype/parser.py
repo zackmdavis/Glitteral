@@ -44,6 +44,18 @@ class Definition(Codeform):
             self.identifier, self.identified
         )
 
+class SubscriptAssignment(Codeform):
+    def __init__(self, collection_identifier, key, value):
+        self.collection_identifier = collection_identifier
+        self.key = key
+        self.value = value
+
+    def __repr__(self):
+        return "<{}: {}_{}:={}>".format(
+            self.__class__.__name__,
+            self.collection, self.key, self.value
+        )
+
 class Conditional(Codeform):
     def __init__(self, condition, consequent, alternative=None):
         self.condition = condition
@@ -172,6 +184,11 @@ def parse_codeform(tokenstream):
                 raise ParsingException("First argument to definition must be "
                                        "identifier.")
             return Definition(*rest)
+        elif first.value == "_:=":
+            if len(rest) != 3:
+                raise ParsingException("Subscript assignment must have 3 "
+                                       "arguments, got {}".format(rest))
+            return SubscriptAssignment(*rest)
         elif first.value == ":=λ":
             # TODO: error checking
             name, argument_sequential, _arrow, return_type, *expressions = rest

@@ -52,6 +52,9 @@ class LexerTest(unittest.TestCase):
     def test_recognize_arrow(self):
         self.assertEqual(Lexer().tokenize('→'), [Arrow('→')])
 
+    def test_recognize_subscript_def(self):
+        self.assertEqual(Lexer().tokenize('_:='), [SubscriptDef('_:=')])
+
     def test_recognize_type_specifier(self):
         self.assertEqual(Lexer().tokenize("^int"), [IntegerSpecifer("^int")])
         self.assertEqual(Lexer().tokenize("^str"), [StringSpecifier("^str")])
