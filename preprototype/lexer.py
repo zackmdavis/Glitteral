@@ -36,7 +36,7 @@ class Token:
                                  self.representation)
 
 
-IDENTIFIER_CHARCLASS = r"[-A-Za-z_:λ+−⋅÷!]"
+IDENTIFIER_CHARCLASS = r"[-A-Za-z_:λ=+−⋅÷!]"
 
 class Reserved(Token):
     ...

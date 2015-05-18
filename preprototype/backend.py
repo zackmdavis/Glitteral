@@ -72,7 +72,7 @@ def generate_application(application, *, statementlike=False, **kwargs):
 
 builtins = {'+': "add_integers", '−': "subtract_integers",
             '⋅': "multiply_integers", '÷': "divide_integers",
-            'append!': "append"}
+            '=': "integers_equal", 'append!': "append"}
 
 def generate_sequential(expression, **kwargs):
     type_to_delimiter = {List: ('vec![', ']'), Vector: ('[', ']')}
@@ -134,10 +134,15 @@ def generate_code(expressions):
     logger.debug("expressions for which to generate code: %s", expressions)
     return """
 // Glitteral standard library arithmetic
+fn integers_equal(a: isize, b: isize) -> bool { a == b }
 fn add_integers(a: isize, b: isize) -> isize { a + b }
 fn subtract_integers(a: isize, b: isize) -> isize { a - b }
 fn multiply_integers(a: isize, b: isize) -> isize { a * b }
 fn divide_integers(a: isize, b: isize) -> isize { a / b }
+fn greater_than(a: isize, b: isize) -> bool { a > b }
+fn less_than(a: isize, b: isize) -> bool { a < b }
+fn not_less_than(a: isize, b: isize) -> bool { a >= b }
+fn not_greater_than(a: isize, b: isize) -> bool { a <= b }
 
 // Glitteral standard library sequential manipulation
 fn append(list: &mut Vec<isize>, item: isize) -> &mut Vec<isize> {

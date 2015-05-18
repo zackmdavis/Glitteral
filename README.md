@@ -7,18 +7,29 @@
 ### Actual demonstration
 
 ```
-$ cat demo.gltrl 
+$ cat demo.gltrl
 (:= glitteral_is_splendid Truth)
 
-(:=λ first_plus_square_of_second [a ^int b ^int] → ^int 
+(:=λ first_plus_square_of_second |a ^int b ^int| → ^int
   (+ a (⋅ b b)))  # This is a comment.
 
+(:= my_list [1 2 3])
+(append! my_list 4)
+
 (if glitteral_is_splendid
-  (print_integer (first_plus_square_of_second 1 2))
+  (if (= (first_plus_square_of_second 1 2) 5)
+    (_:= my_list 0 10)
+    (print_integer 0))
   (print_integer 0))
+
+(for |i my_list|
+  (print_integer i))
 $ ./glitteral demo.gltrl 
 $ ./demo 
-5
+10
+2
+3
+4
 ```
 
 #### "design document" (daydreaming)
