@@ -4,6 +4,8 @@ import re
 
 from collections import namedtuple
 
+from utils import LookaheadStream
+
 logger = logging.getLogger(__name__)
 if os.environ.get("GLITTERAL_DEBUG"):
     logger.setLevel(logging.DEBUG)
@@ -230,4 +232,4 @@ class Lexer(BaseLexer):
 
 
 def lex(source):
-    return iter(Lexer().tokenize(source))
+    return LookaheadStream(Lexer().tokenize(source))

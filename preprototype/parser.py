@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 from lexer import *  # yeah, yeah
-from utils import push, twopartitions
+from utils import twopartitions
 
 logger = logging.getLogger(__name__)
 if os.environ.get("GLITTERAL_DEBUG"):
@@ -155,7 +155,7 @@ class ParsingException(Exception):
     ...
 
 def parse_codeform(tokenstream):
-    open_paren = next(tokenstream)
+    open_paren = tokenstream.pop()
     if not isinstance(open_paren, OpenParenthesis):
         raise ParsingException(
             "Expected an open parenthesis token, got {}.".format(open_paren))
@@ -163,11 +163,12 @@ def parse_codeform(tokenstream):
     rest = []
     done_here = False
     while not done_here:
-        next_token = next(tokenstream)
+        next_token = tokenstream.peek()
         if isinstance(next_token, CloseParenthesis):
+            tokenstream.pop()
             done_here = True
         else:
-            rest.append(parse_expression(push(tokenstream, next_token)))
+            rest.append(parse_expression(tokenstream))
 
     if isinstance(first, IdentifierAtom):
         return Application(first, rest)
@@ -179,7 +180,8 @@ def parse_codeform(tokenstream):
             return Conditional(*rest)
         elif first.value == ":=":
             if len(rest) != 2:
-                raise ParsingException("Definition must have 2 arguments.")
+                raise ParsingException("Definition must have 2 arguments, got "
+                                       "%s", rest)
             if not isinstance(rest[0], IdentifierAtom):
                 raise ParsingException("First argument to definition must be "
                                        "identifier.")
@@ -200,7 +202,7 @@ def parse_codeform(tokenstream):
             return DeterminateIteration(index_identifier, iterable, body)
 
 def parse_sequential(tokenstream):
-    open_delimiter = next(tokenstream)
+    open_delimiter = tokenstream.pop()
     if not (isinstance(open_delimiter, SequentialDelimiter) or
             not isinstance(open_delimiter, OpenDelimiter)):
         raise ParsingException("Expected an opening sequential delimiter ('[' "
@@ -213,28 +215,31 @@ def parse_sequential(tokenstream):
     done_here = False
     # TODO: unify this loop with its analogue in parse_codeform?
     while not done_here:
-        next_token = next(tokenstream)
+        next_token = tokenstream.peek()
         if (isinstance(next_token, SequentialDelimiter) and
             isinstance(next_token, CloseDelimiter)):
+            tokenstream.pop()
             done_here = True
         else:
-            elements.append(parse_expression(push(tokenstream, next_token)))
+            elements.append(parse_expression(tokenstream))
     return sequential_class(elements)
 
 
 def parse_expression(tokenstream):
-    leading_token = next(tokenstream)
+    leading_token = tokenstream.peek()
+    logger.debug("leading_token in parse_expression is %s", leading_token)
     while isinstance(leading_token, Commentary):
-        leading_token = next(tokenstream)
+        tokenstream.pop()
+        leading_token = tokenstream.peek()
 
     if isinstance(leading_token, OpenDelimiter):  # collections
         if isinstance(leading_token, OpenParenthesis):
-            return parse_codeform(push(tokenstream, leading_token))
+            return parse_codeform(tokenstream)
         elif (isinstance(leading_token, OpenBracket) or
             isinstance(leading_token, Pipe)):
-            return parse_sequential(push(tokenstream, leading_token))
+            return parse_sequential(tokenstream)
     else:  # atoms
-        expression_token = leading_token
+        expression_token = tokenstream.pop()
         if isinstance(expression_token, Keyword):
             return PrimitiveAtom(expression_token.representation)
         if isinstance(expression_token, TypeSpecifier):
@@ -251,6 +256,9 @@ def parse_expression(tokenstream):
             return VoidLiteral(None)
         elif isinstance(expression_token, Identifier):
             return IdentifierAtom(expression_token.representation)
+        else:
+            raise ParsingException("Failed to recognize an expression from "
+                                   "{}".format(expression_token))
 
 def parse(tokenstream):
     expressions = []
