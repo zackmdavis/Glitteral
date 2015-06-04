@@ -24,7 +24,7 @@ $ cat demo.gltrl
 
 (for |i my_list|
   (print_integer i))
-$ ./glitteral demo.gltrl 
+$ ./glitteralc demo.gltrl 
 $ ./demo 
 10
 2
