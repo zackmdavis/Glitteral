@@ -261,10 +261,5 @@ def parse_expression(tokenstream):
                                    "{}".format(expression_token))
 
 def parse(tokenstream):
-    expressions = []
-    while True:  # XXX this is awful
-        try:
-            expressions.append(parse_expression(tokenstream))
-        except StopIteration:
-            break
-    return expressions
+    while True:
+        yield parse_expression(tokenstream)
