@@ -53,7 +53,7 @@ class SubscriptAssignment(Codeform):
     def __repr__(self):
         return "<{}: {}_{}:={}>".format(
             self.__class__.__name__,
-            self.collection, self.key, self.value
+            self.collection_identifier, self.key, self.value
         )
 
 class Conditional(Codeform):
