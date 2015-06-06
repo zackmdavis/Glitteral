@@ -1,3 +1,4 @@
+import functools
 import itertools
 
 class LookaheadStream:
@@ -25,5 +26,7 @@ class LookaheadStream:
         return next(self)
 
 
-def twopartitions(sliceable):
-    return zip(sliceable[::2], sliceable[1::2])
+def npartitions(n, sliceable):
+    return zip(*(sliceable[slice(i, None, n)] for i in range(n)))
+
+twopartitions = functools.partial(npartitions, 2)
