@@ -139,10 +139,10 @@ fn add_integers(a: isize, b: isize) -> isize { a + b }
 fn subtract_integers(a: isize, b: isize) -> isize { a - b }
 fn multiply_integers(a: isize, b: isize) -> isize { a * b }
 fn divide_integers(a: isize, b: isize) -> isize { a / b }
-fn greater_than(a: isize, b: isize) -> bool { a > b }
-fn less_than(a: isize, b: isize) -> bool { a < b }
-fn not_less_than(a: isize, b: isize) -> bool { a >= b }
-fn not_greater_than(a: isize, b: isize) -> bool { a <= b }
+fn greater(a: isize, b: isize) -> bool { a > b }
+fn less(a: isize, b: isize) -> bool { a < b }
+fn not_less(a: isize, b: isize) -> bool { a >= b }
+fn not_greater(a: isize, b: isize) -> bool { a <= b }
 
 // Glitteral standard library sequential manipulation
 fn append(list: &mut Vec<isize>, item: isize) -> &mut Vec<isize> {

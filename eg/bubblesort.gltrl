@@ -1,0 +1,17 @@
+# XXX SHEERLY ASPIRATIONAL: this code does not compile; it's here as a
+# statement of intent, that my next milestone is to correctly
+# implement enough of the compiler for this to work—
+
+(:= my_list [5 2 3 1 4])
+
+(:=λ bubblesort! |this_list ^[int] | → Void
+   (for |i (range 5)|
+      (for |i (range 5)|
+         (if (greater_than (this_list i) (this_list (+ i 1)))
+            (do
+               (:= temp (this_list i))
+               (_:= this_list i (this_list (+ i 1)))
+               (_:= this_list (+ i 1) temp)))))
+   Void)
+
+(print_list my_list)
