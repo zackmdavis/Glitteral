@@ -12,13 +12,19 @@ if os.environ.get("GLITTERAL_DEBUG"):
 class Expression:
     mutable = False  # unless otherwise overridden
 
+    def __init__(self):
+        self.global_environment = None  # set during annotation
+        self.local_environment = {}
+
 class Codeform(Expression):
-    ...
+    def __init__(self):
+        super().__init__()
 
 Argument = namedtuple('Argument', ('name', 'type'))
 
 class NamedFunctionDefinition(Codeform):
     def __init__(self, name, argument_sequential, return_type, expressions):
+        super().__init__()
         self.name = name
         self.arguments = [Argument(name, type_specifier)
                           for name, type_specifier
@@ -35,6 +41,7 @@ class NamedFunctionDefinition(Codeform):
 
 class Definition(Codeform):
     def __init__(self, identifier, identified):
+        super().__init__()
         self.identifier = identifier
         self.identified = identified
 
@@ -46,6 +53,7 @@ class Definition(Codeform):
 
 class SubscriptAssignment(Codeform):
     def __init__(self, collection_identifier, key, value):
+        super().__init__()
         self.collection_identifier = collection_identifier
         self.key = key
         self.value = value
@@ -58,6 +66,7 @@ class SubscriptAssignment(Codeform):
 
 class Conditional(Codeform):
     def __init__(self, condition, consequent, alternative=None):
+        super().__init__()
         self.condition = condition
         self.consequent = consequent
         self.alternative = alternative
@@ -70,6 +79,7 @@ class Conditional(Codeform):
 
 class DeterminateIteration(Codeform):
     def __init__(self, index_identifier, iterable, body):
+        super().__init__()
         self.index_identifier = index_identifier
         self.iterable = iterable
         self.body = body
@@ -82,6 +92,7 @@ class DeterminateIteration(Codeform):
 
 class Application(Codeform):
     def __init__(self, function, arguments):
+        super().__init__()
         self.function = function
         self.arguments = arguments
 
@@ -94,7 +105,17 @@ class Application(Codeform):
 
 class Sequential(Expression):
     def __init__(self, elements):
+        super().__init__()
         self.elements = elements
+
+    def __len__(self):
+        return len(self.elements)
+
+    def __eq__(self, other):
+        if len(self.elements) != len(other.elements):
+            return False
+        return all(sel == oel for sel, oel
+                   in zip(self.elements, other.elements))
 
     def __repr__(self):
         return "<{}: {}{}{}>".format(
@@ -114,6 +135,7 @@ class Vector(Sequential):
 
 class Atom(Expression):
     def __init__(self, value):
+        super().__init__()
         self.value = value
 
     def __eq__(self, other):
