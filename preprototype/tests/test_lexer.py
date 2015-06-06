@@ -35,6 +35,9 @@ class LexerTest(unittest.TestCase):
              IntegerLiteral("3"), CloseParenthesis(")")]
         )
 
+    def test_leading_whitespace_is_okay(self):
+        Lexer().tokenize(" (foo)")
+
     def test_recognize_keyword(self):
         self.assertEqual(Lexer().tokenize(":="),
                          [Def(":=")])

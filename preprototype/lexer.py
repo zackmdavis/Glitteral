@@ -148,6 +148,10 @@ class BaseLexer:
         self.tokenclasses = tokenclasses
         self.tokens = []
 
+    def skip_whitespace(self):
+        while self.source[self.candidate_start] in ' \n\t':
+            self.candidate_start += 1  # skip whitespace
+
     def chomp_and_resynchronize(self):
         matched = self.sight[0]
         # contemptibly, '$' can also match "just before the newline at
@@ -156,8 +160,7 @@ class BaseLexer:
         self.tokens.append(matched)
         self.sight = []
         self.candidate_start = self.candidate_end - 1
-        while self.source[self.candidate_start] in ' \n\t':
-            self.candidate_start += 1  # skip whitespace
+        self.skip_whitespace()
         self.candidate_end = self.candidate_start + 1
 
     @staticmethod
@@ -177,6 +180,7 @@ class BaseLexer:
         self.source = source + '█'  # end-of-file sentinel
         self.candidate_start = 0
         self.candidate_end = 1
+        self.skip_whitespace()
         self.sight = []
         while self.candidate_end <= len(self.source):
             candidate = self.source[self.candidate_start:self.candidate_end]
