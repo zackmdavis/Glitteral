@@ -87,8 +87,9 @@ def generate_sequential(expression, **kwargs):
 def represent_identifiable(environment, identifier):
     try:
         identified = environment[identifier]
-    except KeyError:
-        return None
+    except KeyError as e:
+        raise CodeGenerationException(
+            "{} not found in environment".format(identifier)) from e
     if identified.mutable:
         return "&mut {}".format(identifier.value)
     else:
@@ -121,8 +122,7 @@ def generate_expression(expression, *, statementlike=False):
     elif isinstance(expression, Atom):
         if isinstance(expression, IdentifierAtom):
             return (builtins.get(expression.value) or
-                    represent_identifiable(environment, expression) or
-                    "{}".format(expression.value))
+                    represent_identifiable(environment, expression))
         elif isinstance(expression, IntegerAtom):
             return "{}isize".format(expression.value)
         elif isinstance(expression, BooleanAtom):
