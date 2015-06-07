@@ -132,6 +132,15 @@ fn append(list: &mut Vec<isize>, item: isize) -> &mut Vec<isize> {
     list
 }
 
+// Glitteral standard libary ... range builtin function
+fn range(start: usize, end: usize) -> Vec<usize> {
+    let mut items = vec![];
+    for i in start..end {
+        items.push(i)
+    }
+    items
+}
+
 // Glitteral standard library IO
 fn print_integer(n: isize) { println!(\"{}\", n) }
 

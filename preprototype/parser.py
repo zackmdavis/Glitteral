@@ -91,7 +91,10 @@ class Conditional(Codeform):
 
     @property
     def children(self):
-        return [self.condition, self.consequent, self.alternative]
+        branches = [self.condition, self.consequent]
+        if self.alternative is not None:
+            branches.append(self.alternative)
+        return branches
 
     def __repr__(self):
         return "<{}: ({}, {}/{})>".format(
@@ -318,7 +321,7 @@ def parse_expression(tokenstream):
                     if expression_token.representation == "Truth"
                     else BooleanAtom(False))
         elif isinstance(expression_token, VoidLiteral):
-            return VoidLiteral(None)
+            return VoidAtom(None)
         elif isinstance(expression_token, Identifier):
             return IdentifierAtom(expression_token.representation)
         else:

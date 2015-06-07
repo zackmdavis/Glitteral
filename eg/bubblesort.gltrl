@@ -5,9 +5,9 @@
 (:= my_list [5 2 3 1 4])
 
 (:=λ bubblesort! |this_list ^[int] | → Void
-   (for |i (range 5)|
-      (for |i (range 5)|
-         (if (greater_than (this_list i) (this_list (+ i 1)))
+   (for |i (range 0 5)|
+      (for |i (range 0 5)|
+         (if (greater (this_list i) (this_list (+ i 1)))
             (do
                (:= temp (this_list i))
                (_:= this_list i (this_list (+ i 1)))

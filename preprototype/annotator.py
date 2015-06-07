@@ -10,7 +10,11 @@ global_environment = {
     '+': BuiltinAtom("add_integers"), '−': BuiltinAtom("subtract_integers"),
     '⋅': BuiltinAtom("multiply_integers"), '÷': BuiltinAtom("divide_integers"),
     '=': BuiltinAtom("integers_equal"), 'append!': BuiltinAtom("append"),
-    'print_integer': BuiltinAtom("print_integer")
+    'greater': BuiltinAtom("greater"), 'less': BuiltinAtom("less"),
+    'not_greater': BuiltinAtom("not_greater"),
+    'not_less': BuiltinAtom("not_less"),
+    'range': BuiltinAtom("range"),
+    'print_integer': BuiltinAtom("print_integer"),
 }
 
 class IterInto:
@@ -19,6 +23,8 @@ class IterInto:
 
 
 def propogate_environments(expression, toplevel=False):
+    logger.debug("propogating environments for expression %s", expression)
+
     # Snapshot our running record of the global environment for this node,
     expression.global_environment = global_environment.copy()
     # then modify it if directed.
