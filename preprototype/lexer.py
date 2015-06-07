@@ -84,6 +84,19 @@ def type_specifier_class(type_name, type_specifier):
 IntegerSpecifer = type_specifier_class("Integer", "int")
 StringSpecifier = type_specifier_class("String", "str")
 
+# XXX UNCIVILIZED: composing the regexes to do this in a DRYer (Don't
+# Repeat Yourself) way is an intricate task, so I'm OK with leaving
+# this area DAMP (Duplicated Areas of My Program) for now while I
+# advance the project along other fronts
+class IntegerListSpecifier(TypeSpecifier):
+    prefix_recognizer = re.compile(r"(\^\[$)|(\^\[i$)|(\^\[in$)|(\^\[int$)")
+    recognizer = re.compile(r"\^\[int]$")
+
+class StringListSpecifier(TypeSpecifier):
+    prefix_recognizer = re.compile(r"(\^\[$)|(\^\[s$)|(\^\[st$)|(\^\[str$)")
+    recognizer = re.compile(r"\^\[str]$")
+
+
 class OpenDelimiter(Token):
     ...
 
@@ -220,7 +233,11 @@ class BaseLexer:
         return self.tokens
 
 BASE_KEYWORDS = [If, For, Lambda, Def, SubscriptDef, Deflambda]
-TYPE_SPECIFIERS = [IntegerSpecifer, StringSpecifier, Arrow]
+TYPE_SPECIFIERS = [
+    IntegerSpecifer, StringSpecifier,
+    IntegerListSpecifier, StringListSpecifier,
+    Arrow
+]
 TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
     Identifier,
     OpenParenthesis, CloseParenthesis,

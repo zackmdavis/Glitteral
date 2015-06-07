@@ -61,6 +61,10 @@ class LexerTest(unittest.TestCase):
     def test_recognize_type_specifier(self):
         self.assertEqual(Lexer().tokenize("^int"), [IntegerSpecifer("^int")])
         self.assertEqual(Lexer().tokenize("^str"), [StringSpecifier("^str")])
+        self.assertEqual(Lexer().tokenize("^[int]"),
+                         [IntegerListSpecifier("^[int]")])
+        self.assertEqual(Lexer().tokenize("^[str]"),
+                         [StringListSpecifier("^[str]")])
 
     def test_commentary(self):
         self.assertEqual(
