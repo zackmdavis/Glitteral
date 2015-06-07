@@ -74,11 +74,15 @@ class Identifier(Token):
 class TypeSpecifier(Reserved):
     prefix_recognizer = re.compile(r"\^{}*$".format(IDENTIFIER_CHARCLASS))
 
-class IntegerSpecifer(TypeSpecifier):
-    recognizer = re.compile(r"\^int$")
+def type_specifier_class(type_name, type_specifier):
+    return type(
+        "{}Specifier".format(type_name),
+        (TypeSpecifier,),
+        {'recognizer': re.compile(r"\^{}$".format(type_specifier))}
+    )
 
-class StringSpecifier(TypeSpecifier):
-    recognizer = re.compile(r"\^str$")
+IntegerSpecifer = type_specifier_class("Integer", "int")
+StringSpecifier = type_specifier_class("String", "str")
 
 class OpenDelimiter(Token):
     ...
