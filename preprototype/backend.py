@@ -10,7 +10,8 @@ class CodeGenerationException(Exception):
     ...
 
 def rustify_type_specifier(type_specifier_atom):
-    return {'^int': "isize", '^str': "&str"}.get(type_specifier_atom.value)
+    return {'^int': "isize", '^str': "&str",
+            '^[int]': "&mut Vec<isize>", None: "()"}[type_specifier_atom.value]
 
 def rustify_argument(argument):
     return "{}: {}".format(
@@ -27,6 +28,10 @@ def generate_named_function_definition(definition):
            generate_expression(expression)
            for expression in definition.expressions))
 
+def generate_do_block(block):
+    return "{ %s }" % "\n".join(
+        generate_expression(expression) for expression in block.expressions)
+
 def generate_definition(definition):
     return "let {} {} = {};".format(
         'mut' if definition.identified.mutable else '',
@@ -42,11 +47,13 @@ def generate_subscript_assignment(assignment):
     )
 
 def generate_conditional(conditional):
-    return "if %s { %s } else { %s }" % (
+    branches = "if %s { %s }" % (
         generate_expression(conditional.condition),
-        generate_expression(conditional.consequent),
-        generate_expression(conditional.alternative)
+        generate_expression(conditional.consequent)
     )
+    if conditional.alternative is not None:
+        branches += " else { %s }" % generate_expression(conditional.alternative)
+    return branches
 
 def generate_determinate_iteration(iteration):
     return "for &%s in %s.iter() { %s }" % (
@@ -90,6 +97,8 @@ def generate_expression(expression):
     if isinstance(expression, Codeform):
         if isinstance(expression, NamedFunctionDefinition):
             return generate_named_function_definition(expression)
+        elif isinstance(expression, DoBlock):
+            return generate_do_block(expression)
         elif isinstance(expression, Definition):
             return generate_definition(expression)
         elif isinstance(expression, SubscriptAssignment):
@@ -109,6 +118,8 @@ def generate_expression(expression):
             return "{}isize".format(expression.value)
         elif isinstance(expression, BooleanAtom):
             return "true" if expression.value else "false"
+        elif isinstance(expression, VoidAtom):
+            return "()"
         elif isinstance(expression, StringAtom):
             return '"{}"'.format(expression.value)
 
@@ -133,7 +144,7 @@ fn append(list: &mut Vec<isize>, item: isize) -> &mut Vec<isize> {
 }
 
 // Glitteral standard libary ... range builtin function
-fn range(start: usize, end: usize) -> Vec<usize> {
+fn range(start: isize, end: isize) -> Vec<isize> {
     let mut items = vec![];
     for i in start..end {
         items.push(i)
@@ -142,8 +153,8 @@ fn range(start: usize, end: usize) -> Vec<usize> {
 }
 
 // Glitteral standard library IO
-fn print_integer(n: isize) { println!(\"{}\", n) }
-
+fn print_integer(n: isize) { println!(\"{}\", n); }
+fn print_integer_list(l: &mut Vec<isize>) { println!(\"{:?}\", l); }
 
 fn main() {
 %s

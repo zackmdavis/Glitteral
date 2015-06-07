@@ -15,6 +15,7 @@ global_environment = {
     'not_less': BuiltinAtom("not_less"),
     'range': BuiltinAtom("range"),
     'print_integer': BuiltinAtom("print_integer"),
+    'print_integer_list': BuiltinAtom("print_integer_list"),
 }
 
 class IterInto:

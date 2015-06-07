@@ -4,14 +4,15 @@
 
 (:= my_list [5 2 3 1 4])
 
-(:=λ bubblesort! |this_list ^[int] | → Void
+(:=λ bubblesort |this_list ^[int]| → Void
    (for |i (range 0 5)|
       (for |i (range 0 5)|
          (if (greater (this_list i) (this_list (+ i 1)))
             (do
+               (:= i_plus_one (+ i 1))
                (:= temp (this_list i))
                (_:= this_list i (this_list (+ i 1)))
-               (_:= this_list (+ i 1) temp)))))
+               (_:= this_list i_plus_one temp)))))
    Void)
 
-(print_list my_list)
+(print_integer_list my_list)

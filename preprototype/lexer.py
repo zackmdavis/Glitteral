@@ -64,6 +64,9 @@ class SubscriptDef(Keyword):
 class Deflambda(Keyword):
     recognizer = re.compile(r":=λ$")
 
+class Do(Keyword):
+    recognizer = re.compile(r"do$")
+
 class Arrow(Keyword):
     recognizer = re.compile(r"→$")
 
@@ -232,7 +235,7 @@ class BaseLexer:
                     self._handle_tokenizing_error(self.sight, candidate)
         return self.tokens
 
-BASE_KEYWORDS = [If, For, Lambda, Def, SubscriptDef, Deflambda]
+BASE_KEYWORDS = [If, For, Lambda, Def, SubscriptDef, Deflambda, Do]
 TYPE_SPECIFIERS = [
     IntegerSpecifer, StringSpecifier,
     IntegerListSpecifier, StringListSpecifier,

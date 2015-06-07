@@ -65,6 +65,20 @@ class Definition(Codeform):
             self.identifier, self.identified
         )
 
+
+class DoBlock(Codeform):
+    def __init__(self, expressions):
+        super().__init__()
+        self.expressions = expressions
+
+    @property
+    def children(self):
+        return self.expressions
+
+    def __repr__(self):
+        return "<{}: {}>".format(self.__class__.__name__, self.expressions)
+
+
 class SubscriptAssignment(Codeform):
     def __init__(self, collection_identifier, key, value):
         super().__init__()
@@ -264,6 +278,9 @@ def parse_codeform(tokenstream):
             name, argument_sequential, _arrow, return_type, *expressions = rest
             return NamedFunctionDefinition(
                 name, argument_sequential, return_type, expressions)
+        elif first.value == "do":
+            expressions = rest
+            return DoBlock(expressions)
         elif first.value == "for":
             bindings, *body = rest
             index_identifier, iterable = bindings.elements
