@@ -9,7 +9,8 @@ if os.environ.get("GLITTERAL_DEBUG"):
 global_environment = {
     '+': BuiltinAtom("add_integers"), '−': BuiltinAtom("subtract_integers"),
     '⋅': BuiltinAtom("multiply_integers"), '÷': BuiltinAtom("divide_integers"),
-    '=': BuiltinAtom("integers_equal"), 'append!': BuiltinAtom("append")
+    '=': BuiltinAtom("integers_equal"), 'append!': BuiltinAtom("append"),
+    'print_integer': BuiltinAtom("print_integer")
 }
 
 class IterInto:
@@ -18,18 +19,25 @@ class IterInto:
 
 
 def propogate_environments(expression):
+    # Snapshot our running record of the global environment for this node,
     expression.global_environment = global_environment.copy()
+    # then modify it if directed.
     if isinstance(expression, Definition):
         global_environment[expression.identifier.value] = expression.identified
+    if isinstance(expression, NamedFunctionDefinition):
+        global_environment[expression.name.value] = expression
+
     for child in expression.children:
+        # set locals for :=λ, let, for, &c.
         child.local_environment = expression.local_environment.copy()
         if isinstance(expression, NamedFunctionDefinition):
             for argument in expression.arguments:
-                child.local_environment[argument.name.value] = argument
+                child.local_environment[argument.value.value] = argument
         if isinstance(expression, DeterminateIteration):
             child.local_environment[
                 expression.index_identifier.value] = (
                     IterInto(expression.iterable))
+        # and recurse
         propogate_environments(child)
 
 def annotate(expressionstream):

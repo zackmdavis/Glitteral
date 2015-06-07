@@ -11,18 +11,27 @@ from annotator import annotate
 
 class FrontendTestCase(unittest.TestCase):
 
-    def test_named_function_definition_sets_local_environment(self):
+    def test_named_function_definition(self):
         source = """
 (:=λ first_plus_square_of_second |a ^int b ^int| → ^int
   (+ a (⋅ b b)))
 (:= we_assert "a and b were in the fn body's env., but not here")
 """
         defn_first_plus, def_we_assert = annotate(parse(lex(source)))
+        # The local environment has our arguments,
         self.assertEqual(
             Argument(IdentifierAtom('a'), TypeSpecifierAtom("^int")),
             defn_first_plus.expressions[0].local_environment['a']
         )
+        # and they don't leak.
         self.assertIsNone(def_we_assert.local_environment.get('a'))
+
+        # And we can see the defined function from the environment of
+        # the subsequent expression.
+        self.assertEqual(
+            type(def_we_assert.environment['first_plus_square_of_second']),
+            NamedFunctionDefinition
+        )
 
     def test_definition_sets_subsequent_global_environment(self):
         source = """

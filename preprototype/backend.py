@@ -6,8 +6,6 @@ if os.environ.get("GLITTERAL_DEBUG"):
     logger.addHandler(logging.StreamHandler())
 
 
-environment = {}
-
 class CodeGenerationException(Exception):
     ...
 
@@ -16,7 +14,7 @@ def rustify_type_specifier(type_specifier_atom):
 
 def rustify_argument(argument):
     return "{}: {}".format(
-        argument.name.value, rustify_type_specifier(argument.type))
+        argument.value.value, rustify_type_specifier(argument.type_specifier))
 
 def generate_named_function_definition(definition, **kwargs):
     return """fn %s(%s) -> %s {
@@ -30,8 +28,6 @@ def generate_named_function_definition(definition, **kwargs):
            for expression in definition.expressions))
 
 def generate_definition(definition, **kwargs):
-    global environment
-    environment[definition.identifier] = definition.identified
     return "let {} {} = {};".format(
         'mut' if definition.identified.mutable else '',
         definition.identifier.value,
@@ -70,10 +66,6 @@ def generate_application(application, *, statementlike=False, **kwargs):
         ';' if statementlike else ''
     )
 
-builtins = {'+': "add_integers", '−': "subtract_integers",
-            '⋅': "multiply_integers", '÷': "divide_integers",
-            '=': "integers_equal", 'append!': "append"}
-
 def generate_sequential(expression, **kwargs):
     type_to_delimiter = {List: ('vec![', ']'), Vector: ('[', ']')}
     open_delimiter, close_delimiter = type_to_delimiter[expression.__class__]
@@ -84,21 +76,17 @@ def generate_sequential(expression, **kwargs):
          close_delimiter]
     )
 
-def represent_identifiable(environment, identifier):
-    try:
-        identified = environment[identifier]
-    except KeyError as e:
-        print(identifier, identifier.global_environment, identifier.local_environment)
-        raise CodeGenerationException(
-            "{} not found in environment".format(identifier)) from e
-    if identified.mutable:
-        return "&mut {}".format(identifier.value)
+def represent_identifiable(identifier):
+    identified = identifier.environment[identifier.value]
+    if isinstance(identified, BuiltinAtom):
+        return "{}".format(identified.value)
     else:
-        return "{}".format(identifier.value)
+        if getattr(identified, "mutable", None):
+            return "&mut {}".format(identifier.value)
+        else:
+            return "{}".format(identifier.value)
 
 def generate_expression(expression, *, statementlike=False):
-    global environment
-    global builtins
     if isinstance(expression, Codeform):
         if isinstance(expression, NamedFunctionDefinition):
             return generate_named_function_definition(
@@ -122,8 +110,7 @@ def generate_expression(expression, *, statementlike=False):
         return generate_sequential(expression, statementlike=False)
     elif isinstance(expression, Atom):
         if isinstance(expression, IdentifierAtom):
-            return (builtins.get(expression.value) or
-                    represent_identifiable(environment, expression))
+            return represent_identifiable(expression)
         elif isinstance(expression, IntegerAtom):
             return "{}isize".format(expression.value)
         elif isinstance(expression, BooleanAtom):

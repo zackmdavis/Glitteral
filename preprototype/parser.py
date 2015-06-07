@@ -25,6 +25,7 @@ class Codeform(Expression):
     def __init__(self):
         super().__init__()
 
+
 Argument = namedtuple('Argument', ('name', 'type'))
 
 class NamedFunctionDefinition(Codeform):
@@ -185,6 +186,14 @@ class Atom(Expression):
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.value)
 
+class IdentifierAtom(Atom):
+    ...
+
+class Argument(IdentifierAtom):
+    def __init__(self, name, type_specifier):
+        self.value = name
+        self.type_specifier = type_specifier
+
 class IntegerAtom(Atom):
     ...
 
@@ -195,9 +204,6 @@ class BooleanAtom(Atom):
     ...
 
 class VoidAtom(Atom):
-    ...
-
-class IdentifierAtom(Atom):
     ...
 
 class PrimitiveAtom(Atom):
