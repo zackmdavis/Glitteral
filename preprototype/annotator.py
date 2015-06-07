@@ -18,7 +18,7 @@ class IterInto:
         self.iterable = iterable
 
 
-def propogate_environments(expression):
+def propogate_environments(expression, toplevel=False):
     # Snapshot our running record of the global environment for this node,
     expression.global_environment = global_environment.copy()
     # then modify it if directed.
@@ -26,6 +26,11 @@ def propogate_environments(expression):
         global_environment[expression.identifier.value] = expression.identified
     if isinstance(expression, NamedFunctionDefinition):
         global_environment[expression.name.value] = expression
+
+    # "Some" glitteralc backends "may" want to know if an expression is
+    # on the top level (not nested within other statements).
+    if toplevel:
+        expression.toplevel = True
 
     for child in expression.children:
         # set locals for :=λ, let, for, &c.
@@ -42,5 +47,5 @@ def propogate_environments(expression):
 
 def annotate(expressionstream):
     for expression in expressionstream:
-        propogate_environments(expression)
+        propogate_environments(expression, toplevel=True)
         yield expression

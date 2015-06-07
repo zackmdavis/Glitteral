@@ -10,7 +10,9 @@ if os.environ.get("GLITTERAL_DEBUG"):
 
 
 class Expression:
-    mutable = False  # unless otherwise overridden
+    # unless otherwise overridden
+    mutable = False
+    toplevel = False
 
     def __init__(self):
         # These will be reassigned during annotation.
@@ -25,8 +27,6 @@ class Codeform(Expression):
     def __init__(self):
         super().__init__()
 
-
-Argument = namedtuple('Argument', ('name', 'type'))
 
 class NamedFunctionDefinition(Codeform):
     def __init__(self, name, argument_sequential, return_type, expressions):
