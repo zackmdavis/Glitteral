@@ -88,6 +88,7 @@ def represent_identifiable(environment, identifier):
     try:
         identified = environment[identifier]
     except KeyError as e:
+        print(identifier, identifier.global_environment, identifier.local_environment)
         raise CodeGenerationException(
             "{} not found in environment".format(identifier)) from e
     if identified.mutable:

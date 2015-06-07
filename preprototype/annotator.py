@@ -19,30 +19,18 @@ class IterInto:
 
 def propogate_environments(expression):
     expression.global_environment = global_environment.copy()
-    if isinstance(expression, NamedFunctionDefinition):
-        for subexpression in expression.expressions:
-            subexpression.local_environment = (
-                expression.local_environment.copy())
+    if isinstance(expression, Definition):
+        global_environment[expression.identifier.value] = expression.identified
+    for child in expression.children:
+        child.local_environment = expression.local_environment.copy()
+        if isinstance(expression, NamedFunctionDefinition):
             for argument in expression.arguments:
-                subexpression.local_environment[argument.name.value] = argument
-            propogate_environments(subexpression)
-    elif isinstance(expression, Conditional):
-        for subexpression in (expression.condition,
-                              expression.consequent, expression.alternative):
-            subexpression.local_environment = (
-                expression.local_environment.copy())
-            propogate_environments(subexpression)
-    elif isinstance(expression, DeterminateIteration):
-        for subexpression in expression.body:
-            subexpression.local_environment = (
-                expression.local_environment.copy())
-            subexpression.local_environment[
+                child.local_environment[argument.name.value] = argument
+        if isinstance(expression, DeterminateIteration):
+            child.local_environment[
                 expression.index_identifier.value] = (
                     IterInto(expression.iterable))
-            propogate_environments(subexpression)
-    elif isinstance(expression, Definition):
-        global_environment[expression.identifier.value] = expression.identified
-
+        propogate_environments(child)
 
 def annotate(expressionstream):
     for expression in expressionstream:

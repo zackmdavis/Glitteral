@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, ChainMap
 
 from lexer import *  # yeah, yeah
 from utils import twopartitions
@@ -13,8 +13,13 @@ class Expression:
     mutable = False  # unless otherwise overridden
 
     def __init__(self):
-        self.global_environment = None  # set during annotation
+        # These will be reassigned during annotation.
+        self.global_environment = {}
         self.local_environment = {}
+
+    @property
+    def environment(self):
+        return ChainMap(self.local_environment, self.global_environment)
 
 class Codeform(Expression):
     def __init__(self):
@@ -32,6 +37,10 @@ class NamedFunctionDefinition(Codeform):
         self.return_type = return_type
         self.expressions = expressions
 
+    @property
+    def children(self):
+        return self.expressions
+
     def __repr__(self):
         return "<{}: {}({}) → {}>".format(
             self.__class__.__name__,
@@ -44,6 +53,10 @@ class Definition(Codeform):
         super().__init__()
         self.identifier = identifier
         self.identified = identified
+
+    @property
+    def children(self):
+        return [self.identifier, self.identified]
 
     def __repr__(self):
         return "<{}: {}:={}>".format(
@@ -58,6 +71,10 @@ class SubscriptAssignment(Codeform):
         self.key = key
         self.value = value
 
+    @property
+    def children(self):
+        return [self.collection_identifier, self.key, self.value]
+
     def __repr__(self):
         return "<{}: {}_{}:={}>".format(
             self.__class__.__name__,
@@ -70,6 +87,10 @@ class Conditional(Codeform):
         self.condition = condition
         self.consequent = consequent
         self.alternative = alternative
+
+    @property
+    def children(self):
+        return [self.condition, self.consequent, self.alternative]
 
     def __repr__(self):
         return "<{}: ({}, {}/{})>".format(
@@ -84,6 +105,10 @@ class DeterminateIteration(Codeform):
         self.iterable = iterable
         self.body = body
 
+    @property
+    def children(self):
+        return [self.index_identifier, self.iterable] + self.body
+
     def __repr__(self):
         return "<{}: [{} {}]>".format(
             self.__class__.__name__,
@@ -96,6 +121,10 @@ class Application(Codeform):
         self.function = function
         self.arguments = arguments
 
+    @property
+    def children(self):
+        return [self.function] + self.arguments
+
     def __repr__(self):
         return "<{}: ({}, {})>".format(
             self.__class__.__name__,
@@ -107,6 +136,10 @@ class Sequential(Expression):
     def __init__(self, elements):
         super().__init__()
         self.elements = elements
+
+    @property
+    def children(self):
+        return self.elements
 
     def __len__(self):
         return len(self.elements)
@@ -137,6 +170,10 @@ class Atom(Expression):
     def __init__(self, value):
         super().__init__()
         self.value = value
+
+    @property
+    def children(self):
+        return []
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__ and

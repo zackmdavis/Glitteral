@@ -11,17 +11,18 @@ from annotator import annotate
 
 class FrontendTestCase(unittest.TestCase):
 
-    def test_experimental_annotation_development(self):
+    def test_named_function_definition_sets_local_environment(self):
         source = """
 (:=λ first_plus_square_of_second |a ^int b ^int| → ^int
-  (+ a (⋅ b b)))  # This is a comment.
+  (+ a (⋅ b b)))
+(:= we_assert "a and b were in the fn body's env., but not here")
 """
-        expressionstream = [n for n in parse(lex(source))]
-        annotated = [n for n in annotate(parse(lex(source)))]
-        # from pudb import set_trace as debug; debug()
-        #
-        # TODO make this into a real test case instead of a mere setup
-        # harness for an exploration REPL
+        defn_first_plus, def_we_assert = annotate(parse(lex(source)))
+        self.assertEqual(
+            Argument(IdentifierAtom('a'), TypeSpecifierAtom("^int")),
+            defn_first_plus.expressions[0].local_environment['a']
+        )
+        self.assertIsNone(def_we_assert.local_environment.get('a'))
 
     def test_definition_sets_subsequent_global_environment(self):
         source = """
