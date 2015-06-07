@@ -8,6 +8,7 @@ import subprocess
 
 from lexer import lex
 from parser import parse
+from annotator import annotate
 from backend import generate_code
 
 if __name__ == "__main__":
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     with open(sys.argv[1]) as source_file:
         source = source_file.read()
 
-    generated_code = generate_code(parse(lex(source)))
+    generated_code = generate_code(annotate(parse(lex(source))))
     if args.just_rust:
         print(generated_code)
         sys.exit(0)

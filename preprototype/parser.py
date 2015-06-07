@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, ChainMap
 
 from lexer import *  # yeah, yeah
 from utils import twopartitions
@@ -10,21 +10,37 @@ if os.environ.get("GLITTERAL_DEBUG"):
 
 
 class Expression:
-    mutable = False  # unless otherwise overridden
+    # unless otherwise overridden
+    mutable = False
+    toplevel = False
+
+    def __init__(self):
+        # These will be reassigned during annotation.
+        self.global_environment = {}
+        self.local_environment = {}
+
+    @property
+    def environment(self):
+        return ChainMap(self.local_environment, self.global_environment)
 
 class Codeform(Expression):
-    ...
+    def __init__(self):
+        super().__init__()
 
-Argument = namedtuple('Argument', ('name', 'type'))
 
 class NamedFunctionDefinition(Codeform):
     def __init__(self, name, argument_sequential, return_type, expressions):
+        super().__init__()
         self.name = name
         self.arguments = [Argument(name, type_specifier)
                           for name, type_specifier
                           in twopartitions(argument_sequential.elements)]
         self.return_type = return_type
         self.expressions = expressions
+
+    @property
+    def children(self):
+        return self.expressions
 
     def __repr__(self):
         return "<{}: {}({}) → {}>".format(
@@ -35,8 +51,13 @@ class NamedFunctionDefinition(Codeform):
 
 class Definition(Codeform):
     def __init__(self, identifier, identified):
+        super().__init__()
         self.identifier = identifier
         self.identified = identified
+
+    @property
+    def children(self):
+        return [self.identifier, self.identified]
 
     def __repr__(self):
         return "<{}: {}:={}>".format(
@@ -46,9 +67,14 @@ class Definition(Codeform):
 
 class SubscriptAssignment(Codeform):
     def __init__(self, collection_identifier, key, value):
+        super().__init__()
         self.collection_identifier = collection_identifier
         self.key = key
         self.value = value
+
+    @property
+    def children(self):
+        return [self.collection_identifier, self.key, self.value]
 
     def __repr__(self):
         return "<{}: {}_{}:={}>".format(
@@ -58,9 +84,14 @@ class SubscriptAssignment(Codeform):
 
 class Conditional(Codeform):
     def __init__(self, condition, consequent, alternative=None):
+        super().__init__()
         self.condition = condition
         self.consequent = consequent
         self.alternative = alternative
+
+    @property
+    def children(self):
+        return [self.condition, self.consequent, self.alternative]
 
     def __repr__(self):
         return "<{}: ({}, {}/{})>".format(
@@ -70,9 +101,14 @@ class Conditional(Codeform):
 
 class DeterminateIteration(Codeform):
     def __init__(self, index_identifier, iterable, body):
+        super().__init__()
         self.index_identifier = index_identifier
         self.iterable = iterable
         self.body = body
+
+    @property
+    def children(self):
+        return [self.index_identifier, self.iterable] + self.body
 
     def __repr__(self):
         return "<{}: [{} {}]>".format(
@@ -82,8 +118,13 @@ class DeterminateIteration(Codeform):
 
 class Application(Codeform):
     def __init__(self, function, arguments):
+        super().__init__()
         self.function = function
         self.arguments = arguments
+
+    @property
+    def children(self):
+        return [self.function] + self.arguments
 
     def __repr__(self):
         return "<{}: ({}, {})>".format(
@@ -94,7 +135,21 @@ class Application(Codeform):
 
 class Sequential(Expression):
     def __init__(self, elements):
+        super().__init__()
         self.elements = elements
+
+    @property
+    def children(self):
+        return self.elements
+
+    def __len__(self):
+        return len(self.elements)
+
+    def __eq__(self, other):
+        if len(self.elements) != len(other.elements):
+            return False
+        return all(sel == oel for sel, oel
+                   in zip(self.elements, other.elements))
 
     def __repr__(self):
         return "<{}: {}{}{}>".format(
@@ -114,7 +169,12 @@ class Vector(Sequential):
 
 class Atom(Expression):
     def __init__(self, value):
+        super().__init__()
         self.value = value
+
+    @property
+    def children(self):
+        return []
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__ and
@@ -126,6 +186,14 @@ class Atom(Expression):
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.value)
 
+class IdentifierAtom(Atom):
+    ...
+
+class Argument(IdentifierAtom):
+    def __init__(self, name, type_specifier):
+        self.value = name
+        self.type_specifier = type_specifier
+
 class IntegerAtom(Atom):
     ...
 
@@ -136,9 +204,6 @@ class BooleanAtom(Atom):
     ...
 
 class VoidAtom(Atom):
-    ...
-
-class IdentifierAtom(Atom):
     ...
 
 class PrimitiveAtom(Atom):
