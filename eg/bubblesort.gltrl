@@ -1,18 +1,15 @@
-# XXX SHEERLY ASPIRATIONAL: this code does not compile; it's here as a
-# statement of intent, that my next milestone is to correctly
-# implement enough of the compiler for this to work—
-
-(:= my_list [5 2 3 1 4])
+(:= my_list [6 5 4 3 2 1])
 
 (:=λ bubblesort |this_list ^[int]| → Void
-   (for |i (range 0 5)|
-      (for |j (range 0 5)|
+   (for |pass_through_list (range 0 6)|
+      (for |i (range 0 5)|
          (if (greater (_ this_list i) (_ this_list (+ i 1)))
             (do
                (:= i_plus_one (+ i 1))
                (:= temp (_ this_list i))
                (_:= this_list i (_ this_list (+ i 1)))
-               (_:= this_list i_plus_one temp)))))
+               (_:= this_list i_plus_one temp)
+               (print_integer_list this_list)))))
    Void)
 
 (bubblesort my_list)
