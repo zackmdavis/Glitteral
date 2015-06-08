@@ -1,9 +1,12 @@
 (:= my_list [6 5 4 3 2 1])
 
-(:=λ bubblesort |this_list ^[int]| → Void
+(:=λ misplaced? |first ^int second ^int| → ^bool
+   (greater first second))
+
+(:=λ bubblesort! |this_list ^[int]| → Void
    (for |pass_through_list (range 0 6)|
       (for |i (range 0 5)|
-         (if (greater (_ this_list i) (_ this_list (+ i 1)))
+         (if (misplaced? (_ this_list i) (_ this_list (+ i 1)))
             (do
                (:= i_plus_one (+ i 1))
                (:= temp (_ this_list i))
@@ -12,5 +15,5 @@
                (print_integer_list this_list)))))
    Void)
 
-(bubblesort my_list)
+(bubblesort! my_list)
 (print_integer_list my_list)

@@ -71,8 +71,10 @@
 
     ("\\^int" 0 font-lock-type-face)
     ("\\^str" 0 font-lock-type-face)
+    ("\\^bool" 0 font-lock-type-face)
     ("\\^\\[int\\]" 0 font-lock-type-face)
-    ("\\^\\[str\\]" 0 font-lock-type-face)))
+    ("\\^\\[str\\]" 0 font-lock-type-face)
+    ("\\^\\[bool\\]" 0 font-lock-type-face)))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gltrl\\'" . glitteral-mode))

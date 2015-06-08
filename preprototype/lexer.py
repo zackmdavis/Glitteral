@@ -90,6 +90,7 @@ def type_specifier_class(type_name, type_specifier):
 
 IntegerSpecifer = type_specifier_class("Integer", "int")
 StringSpecifier = type_specifier_class("String", "str")
+BooleanSpecifier = type_specifier_class("Boolean", "bool")
 
 # XXX UNCIVILIZED: composing the regexes to do this in a DRYer (Don't
 # Repeat Yourself) way is an intricate task, so I'm OK with leaving
@@ -241,7 +242,7 @@ class BaseLexer:
 
 BASE_KEYWORDS = [If, For, Lambda, Def, SubscriptDef, Deflambda, Do]
 TYPE_SPECIFIERS = [
-    IntegerSpecifer, StringSpecifier,
+    IntegerSpecifer, StringSpecifier, BooleanSpecifier,
     IntegerListSpecifier, StringListSpecifier,
     Arrow
 ]

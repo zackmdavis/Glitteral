@@ -2,7 +2,7 @@ from invoke import task, run
 
 @task
 def clean():
-    run("rm __glitteral_compiled.rs demo")
+    run("rm __*_compiled.rs demo")
     print("clean!")
 
 def compile(sourcefile, ir=False):

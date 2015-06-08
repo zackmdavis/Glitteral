@@ -1,3 +1,6 @@
+import logging
+import os
+
 from parser import *  # between you and me
 
 logger = logging.getLogger(__name__)

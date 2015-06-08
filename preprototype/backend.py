@@ -1,3 +1,7 @@
+import logging
+import functools
+import os
+
 from parser import *  # tell it to somepony who cares
 
 logger = logging.getLogger(__name__)
@@ -10,18 +14,26 @@ class CodeGenerationException(Exception):
     ...
 
 def rustify_type_specifier(type_specifier_atom):
-    return {'^int': "isize", '^str': "&str",
+    return {'^int': "isize", '^str': "&str", '^bool': "bool",
             '^[int]': "&mut Vec<isize>", None: "()"}[type_specifier_atom.value]
 
 def rustify_argument(argument):
     return "{}: {}".format(
         argument.value.value, rustify_type_specifier(argument.type_specifier))
 
+def condescend_to_ascii(identifier):
+    replacements = {'!': "_bang_", '?': "_question_"}
+    return functools.reduce(
+        lambda s, bad_ok: s.replace(*bad_ok),
+        replacements.items(),
+        identifier
+    )
+
 def generate_named_function_definition(definition):
     return """fn %s(%s) -> %s {
 %s
 }
-""" % (definition.name.value,
+""" % (condescend_to_ascii(definition.name.value),
        ', '.join(rustify_argument(arg) for arg in definition.arguments),
        rustify_type_specifier(definition.return_type),
        '\n'.join(
@@ -35,7 +47,7 @@ def generate_do_block(block):
 def generate_definition(definition):
     return "let {} {} = {};".format(
         'mut' if definition.identified.mutable else '',
-        definition.identifier.value,
+        condescend_to_ascii(definition.identifier.value),
         generate_expression(definition.identified)
     )
 
@@ -93,11 +105,12 @@ def represent_identifiable(identifier):
         return "{}{}".format(identified.value,
                              ';' if identifier.statementlike else '')
     else:
+        underidentifier = condescend_to_ascii(identifier.value)
         if getattr(identified, "mutable", None):
-            return "&mut {}{}".format(identifier.value,
+            return "&mut {}{}".format(underidentifier,
                                       ';' if identifier.statementlike else '')
         else:
-            return "{}{}".format(identifier.value,
+            return "{}{}".format(underidentifier,
                                  ';' if identifier.statementlike else '')
 
 def generate_expression(expression):

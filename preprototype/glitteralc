@@ -31,7 +31,8 @@ if __name__ == "__main__":
         print(generated_code)
         sys.exit(0)
 
-    with open("__glitteral_compiled.rs", 'w') as code_file:
+    ir_name = "__{}_compiled.rs".format(source_name)
+    with open(ir_name, 'w') as code_file:
         code_file.write(generated_code)
     exit_code = subprocess.call(
         ['rustc',
@@ -39,6 +40,6 @@ if __name__ == "__main__":
          '--allow', "non_snake_case",
          '--allow', "unused_variables",
          '--crate-name', output_name,
-         "__glitteral_compiled.rs"]
+         ir_name]
     )
     sys.exit(exit_code)
