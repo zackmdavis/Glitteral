@@ -24,7 +24,9 @@
   '("if" "for" "λ" ":=" ":=λ" "_:="))
 
 (defconst glitteral-font-lock-keywords
-  `((,(concat "(\\("
+  `(("#.*$" 0 font-lock-comment-face)
+
+    (,(concat "(\\("
               (regexp-opt '(":=λ"))
               "\\)\\>"
               ;; whitespace
@@ -34,11 +36,26 @@
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face nil t))
 
-   ("\\<int\\>" 0 font-lock-type-face)
-   ("\\<str\\>" 0 font-lock-type-face)
+    (,(concat "(\\("
+              (regexp-opt '(":=" "_:="))
+              "\\)"
+              ;; whitespace
+              "[ \r\n\t]+"
+              ;; variable name
+              "\\([^ \r\n\t()]+\\)")
+     (1 font-lock-keyword-face)
+     (2 font-lock-variable-name-face))
 
-   ("\\<for\\>" 0 font-lock-keyword-face)
-   ("\\<if\\>" 0 font-lock-keyword-face)))
+    (,(concat "\\<" (regexp-opt '("Truth" "Falsity" "Void")) "\\>")
+     0 font-lock-constant-face)
+
+    (,(concat "\\<" (regexp-opt '("for" "if" "while" "do")) "\\>")
+     0 font-lock-keyword-face)
+
+    ("\\^int" 0 font-lock-type-face)
+    ("\\^str" 0 font-lock-type-face)
+    ("\\^\\[int\\]" 0 font-lock-type-face)
+    ("\\^\\[str\\]" 0 font-lock-type-face)))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gltrl\\'" . glitteral-mode))
@@ -48,7 +65,14 @@
   (interactive)
   (kill-all-local-variables)
   (use-local-map glitteral-mode-map)
+
   (setq font-lock-defaults '(glitteral-font-lock-keywords))
+  (setq-local comment-start-skip "#+\\s-*")
+  (setq-local comment-start "#")
+
+  (setq-local indent-line-function 'lisp-indent-line)
+  (setq-local lisp-indent-offset 3)
+
   (setq major-mode 'glitteral-mode)
   (setq mode-name "Glitteral")
   (run-hooks 'glitteral-mode-hook))
