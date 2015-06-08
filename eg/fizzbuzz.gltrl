@@ -1,0 +1,17 @@
+# XXX ASPIRATIONAL
+
+# http://en.wikipedia.org/w/index.php?title=Fizz_buzz&oldid=662465165#Other_uses
+
+(:=λ modulo |a ^int n ^int| → ^int
+   (:= quotient (÷ a n))
+   (− a (⋅ quotient n)))
+
+(:=λ fizzbuzz |n ^int| → Void
+   (for |i (range 1 n)|
+      (if (= (modulo i 3) 0)
+         (print! "fizz"))
+      (if (= (modulo i 5) 0)
+         (print! "buzz"))
+      (if (& (≠ (modulo i 3) 0) (≠ (modulo i 5) 0))
+         (println! i)
+         (println!))))

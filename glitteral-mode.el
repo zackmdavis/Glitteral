@@ -1,22 +1,39 @@
 (defvar glitteral-mode-hook nil)
 
+(defun glitteral-insert-def ()
+  (interactive)
+  (insert ":="))
+
 (defun glitteral-insert-lambda ()
   (interactive)
   (insert "λ"))
+
+(defun glitteral-insert-arrow ()
+  (interactive)
+  (insert "→"))
+
+(defun glitteral-insert-subtraction-sign ()
+  (interactive)
+  (insert "−"))
 
 (defun glitteral-insert-multiplication-dot ()
   (interactive)
   (insert "⋅"))
 
-(defun glitteral-insert-def ()
+(defun glitteral-insert-division-sign ()
   (interactive)
-  (insert ":="))
+  (insert "÷"))
+
+(defun glitteral-insert-not-equals ()
+  (interactive)
+  (insert "≠"))
 
 (defvar glitteral-mode-map
   (let ((map (make-keymap)))
     (define-key map (kbd "M-d") 'glitteral-insert-def)
     (define-key map (kbd "M-l") 'glitteral-insert-lambda)
     (define-key map (kbd "M-*") 'glitteral-insert-multiplication-dot)
+    (define-key map [M-kp-divide] 'glitteral-insert-division-sign)
     map)
   "Keymap for Glitteral major mode")
 
