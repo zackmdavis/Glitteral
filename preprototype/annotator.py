@@ -16,6 +16,7 @@ global_environment = {
     'range': BuiltinAtom("range"),
     'print_integer': BuiltinAtom("print_integer"),
     'print_integer_list': BuiltinAtom("print_integer_list"),
+    '_': BuiltinAtom("get_subscript")
 }
 
 class IterInto:

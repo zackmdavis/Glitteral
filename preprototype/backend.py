@@ -40,7 +40,7 @@ def generate_definition(definition):
     )
 
 def generate_subscript_assignment(assignment):
-    return "{}[{}] = {};".format(
+    return "{}[{} as usize] = {};".format(
         assignment.collection_identifier.value,
         assignment.key.value,  # XXX: I'm overusing the word "value"
         generate_expression(assignment.value)
@@ -137,19 +137,20 @@ fn less(a: isize, b: isize) -> bool { a < b }
 fn not_less(a: isize, b: isize) -> bool { a >= b }
 fn not_greater(a: isize, b: isize) -> bool { a <= b }
 
-// Glitteral standard library sequential manipulation
+// more builtins
 fn append(list: &mut Vec<isize>, item: isize) -> &mut Vec<isize> {
     list.push(item);
     list
 }
-
-// Glitteral standard libary ... range builtin function
 fn range(start: isize, end: isize) -> Vec<isize> {
     let mut items = vec![];
     for i in start..end {
         items.push(i)
     }
     items
+}
+fn get_subscript(container: &mut Vec<isize>, index: isize) -> isize {
+    container[index as usize]
 }
 
 // Glitteral standard library IO
