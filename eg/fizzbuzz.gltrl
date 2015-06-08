@@ -14,4 +14,6 @@
          (print! "buzz"))
       (if (& (≠ (modulo i 3) 0) (≠ (modulo i 5) 0))
          (println! i)
-         (println!))))
+         (println! ""))))
+
+(fizzbuzz 30)

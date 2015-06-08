@@ -38,7 +38,11 @@ class Token:
                                  self.representation)
 
 
-IDENTIFIER_CHARCLASS = r"[-A-Za-z_:λ=+−⋅÷!]"
+# XXX TODO FIXME: we should take the few moments of research to look
+# up a way to systematically define the right unicode identifier
+# charclass, rather than just adding ad hoc special characters here as
+# we need them
+IDENTIFIER_CHARCLASS = r"[-A-Za-z_:λ=+−⋅÷!?&≠∨]"
 
 class Reserved(Token):
     ...

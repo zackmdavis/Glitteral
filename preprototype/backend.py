@@ -84,7 +84,11 @@ def generate_sequential(expression):
     ) + (';' if expression.statementlike else '')
 
 def represent_identifiable(identifier):
-    identified = identifier.environment[identifier.value]
+    try:
+        identified = identifier.environment[identifier.value]
+    except KeyError as e:
+        raise CodeGenerationException(
+            "{} not found in environment".format(identifier.value)) from e
     if isinstance(identified, BuiltinAtom):
         return "{}{}".format(identified.value,
                              ';' if identifier.statementlike else '')
@@ -132,8 +136,11 @@ def generate_expression(expression):
 def generate_code(expressions):
     logger.debug("expressions for which to generate code: %s", expressions)
     return """
+use std::fmt::Display;
+
 // Glitteral standard library arithmetic
 fn integers_equal(a: isize, b: isize) -> bool { a == b }
+fn integers_not_equal(a: isize, b: isize) -> bool { a != b }
 fn add_integers(a: isize, b: isize) -> isize { a + b }
 fn subtract_integers(a: isize, b: isize) -> isize { a - b }
 fn multiply_integers(a: isize, b: isize) -> isize { a * b }
@@ -158,6 +165,21 @@ fn range(start: isize, end: isize) -> Vec<isize> {
 fn get_subscript(container: &mut Vec<isize>, index: isize) -> isize {
     container[index as usize]
 }
+fn print<T: Display>(printable: T) {
+    print!("{}", printable);
+}
+fn println<T: Display>(printable: T) {
+    println!("{}", printable);
+}
+
+// conjunction and disjunction
+fn and(a: bool, b: bool) -> bool {
+    a && b
+}
+fn or(a: bool, b: bool) -> bool {
+    a || b
+}
+
 
 // Glitteral standard library IO
 fn print_integer(n: isize) { println!(\"{}\", n); }

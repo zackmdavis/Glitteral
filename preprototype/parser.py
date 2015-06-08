@@ -244,8 +244,9 @@ class TypeSpecifierAtom(PrimitiveAtom):
     ...
 
 class BuiltinAtom(Atom):
-    # maybe distinguish builtin functions from ordinary identifiers?
-    ...
+    def __init__(self, value, special=False):
+        super().__init__(value)
+        self.special = special
 
 class ParsingException(Exception):
     ...

@@ -9,14 +9,26 @@ if os.environ.get("GLITTERAL_DEBUG"):
 global_environment = {
     '+': BuiltinAtom("add_integers"), '−': BuiltinAtom("subtract_integers"),
     '⋅': BuiltinAtom("multiply_integers"), '÷': BuiltinAtom("divide_integers"),
-    '=': BuiltinAtom("integers_equal"), 'append!': BuiltinAtom("append"),
+    '=': BuiltinAtom("integers_equal"), '≠': BuiltinAtom("integers_not_equal"),
+    'append!': BuiltinAtom("append"),
     'greater': BuiltinAtom("greater"), 'less': BuiltinAtom("less"),
     'not_greater': BuiltinAtom("not_greater"),
     'not_less': BuiltinAtom("not_less"),
     'range': BuiltinAtom("range"),
     'print_integer': BuiltinAtom("print_integer"),
     'print_integer_list': BuiltinAtom("print_integer_list"),
-    '_': BuiltinAtom("get_subscript")
+    '_': BuiltinAtom("get_subscript"),
+
+    # TODO: variadics?
+    'print!': BuiltinAtom("print"),
+    'println!': BuiltinAtom("println"),
+    '&': BuiltinAtom("and"),
+
+    # The Rust backend can naively implement some builtin functions as
+    # prewritten Rust functions, but might need to do something
+    # cleverer for builtins with polymorphic arguments or other cases
+    # where Glitteral wants different semantics (or can we smooth over
+    # some of this with traits??) ...
 }
 
 class IterInto:
