@@ -12,12 +12,12 @@ if os.environ.get("GLITTERAL_DEBUG"):
 class Expression:
     # unless otherwise overridden
     mutable = False
-    toplevel = False
 
     def __init__(self):
         # These will be reassigned during annotation.
         self.global_environment = {}
         self.local_environment = {}
+        self.statementlike = None
 
     @property
     def environment(self):
@@ -123,8 +123,22 @@ class DeterminateIteration(Codeform):
         self.iterable = iterable
         self.body = body
 
+        self.index_identifier.statementlike = False
+        self.iterable.statementlike = False
+
     @property
     def children(self):
+        # XXX LACK OF THEORETICAL AND ÆSTHETIC INTEGRITY: Considering the index
+        # and iterable as "children" in for loops seems a little in tension
+        # with not considering function arguments as "children". Which is
+        # correct??  If they're not "children" in the "usual" sense, how shall
+        # we annotate them?
+        #
+        # Motivation: the index identifier and iterable should _not_ be
+        # statementlike (the Rust backend should not suffix them with a
+        # semicolon), but the body expressions _should_. We seem to have
+        # successfully hacked around this in our initializer here, but it
+        # should be more elegant and graceful.
         return [self.index_identifier, self.iterable] + self.body
 
     def __repr__(self):

@@ -24,8 +24,12 @@ class IterInto:
         self.iterable = iterable
 
 
-def propogate_environments(expression, toplevel=False):
-    logger.debug("propogating environments for expression %s", expression)
+def propogate_environments(expression, statementlike=True):
+    logger.debug("propogating environments for %sstatementlike expression %s",
+                 'non-' if not statementlike else '', expression)
+
+    if expression.statementlike is None:
+        expression.statementlike = statementlike
 
     # Snapshot our running record of the global environment for this node,
     expression.global_environment = global_environment.copy()
@@ -35,12 +39,7 @@ def propogate_environments(expression, toplevel=False):
     if isinstance(expression, NamedFunctionDefinition):
         global_environment[expression.name.value] = expression
 
-    # "Some" glitteralc backends "may" want to know if an expression is
-    # on the top level (not nested within other statements).
-    if toplevel:
-        expression.toplevel = True
-
-    for child in expression.children:
+    for i, child in enumerate(expression.children):
         # set locals for :=λ, let, for, &c.
         child.local_environment = expression.local_environment.copy()
         if isinstance(expression, NamedFunctionDefinition):
@@ -50,10 +49,15 @@ def propogate_environments(expression, toplevel=False):
             child.local_environment[
                 expression.index_identifier.value] = (
                     IterInto(expression.iterable))
-        # and recurse
-        propogate_environments(child)
+
+        child_is_statementlike = (
+            (i+1 != len(expression.children)) and
+            (not (isinstance(expression, Conditional) or
+                  isinstance(expression, Application) or
+                  isinstance(expression, Sequential))))
+        propogate_environments(child, statementlike=child_is_statementlike)
 
 def annotate(expressionstream):
     for expression in expressionstream:
-        propogate_environments(expression, toplevel=True)
+        propogate_environments(expression, statementlike=True)
         yield expression

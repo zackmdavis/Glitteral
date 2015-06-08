@@ -70,28 +70,31 @@ def generate_application(application):
     return "{}({}){}".format(
         generate_expression(application.function),  # XX
         ', '.join(generate_expression(arg) for arg in application.arguments),
-        ';' if application.toplevel else ''
+        ';' if application.statementlike else ''
     )
 
 def generate_sequential(expression):
     type_to_delimiter = {List: ('vec![', ']'), Vector: ('[', ']')}
-    open_delimiter, close_delimiter = type_to_delimiter[expression.__class__]
+    open_delimiter, close_delimiter = type_to_delimiter[type(expression)]
     return ''.join(
         [open_delimiter,
          ', '.join(generate_expression(element)
                    for element in expression.elements),
          close_delimiter]
-    )
+    ) + (';' if expression.statementlike else '')
 
 def represent_identifiable(identifier):
     identified = identifier.environment[identifier.value]
     if isinstance(identified, BuiltinAtom):
-        return "{}".format(identified.value)
+        return "{}{}".format(identified.value,
+                             ';' if identifier.statementlike else '')
     else:
         if getattr(identified, "mutable", None):
-            return "&mut {}".format(identifier.value)
+            return "&mut {}{}".format(identifier.value,
+                                      ';' if identifier.statementlike else '')
         else:
-            return "{}".format(identifier.value)
+            return "{}{}".format(identifier.value,
+                                 ';' if identifier.statementlike else '')
 
 def generate_expression(expression):
     if isinstance(expression, Codeform):
@@ -115,13 +118,16 @@ def generate_expression(expression):
         if isinstance(expression, IdentifierAtom):
             return represent_identifiable(expression)
         elif isinstance(expression, IntegerAtom):
-            return "{}isize".format(expression.value)
+            return "{}isize{}".format(expression.value,
+                                      ';' if expression.statementlike else '')
         elif isinstance(expression, BooleanAtom):
-            return "true" if expression.value else "false"
+            return ("true{}" if expression.value else "false{}").format(
+                ';' if expression.statementlike else '')
         elif isinstance(expression, VoidAtom):
-            return "()"
+            return "(){}".format(';' if expression.statementlike else '')
         elif isinstance(expression, StringAtom):
-            return '"{}"'.format(expression.value)
+            return '"{}{}"'.format(expression.value,
+                                   ';' if expression.statementlike else '')
 
 def generate_code(expressions):
     logger.debug("expressions for which to generate code: %s", expressions)
