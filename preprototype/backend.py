@@ -67,6 +67,15 @@ def generate_conditional(conditional):
         branches += " else { %s }" % generate_expression(conditional.alternative)
     return branches
 
+def generate_singletracked_conditional(one_conditional):
+    return "if %s { %s }" % (
+        generate_expression(one_conditional.condition),
+        '\n'.join(
+            generate_expression(expression)
+            for expression in one_conditional.expressions
+        )
+    )
+
 def generate_determinate_iteration(iteration):
     return "for &%s in %s.iter() { %s }" % (
         tuple(map(generate_expression,
@@ -125,6 +134,8 @@ def generate_expression(expression):
             return generate_subscript_assignment(expression)
         elif isinstance(expression, Conditional):
             return generate_conditional(expression)
+        elif isinstance(expression, SingletrackedConditional):
+            return generate_singletracked_conditional(expression)
         elif isinstance(expression, DeterminateIteration):
             return generate_determinate_iteration(expression)
         elif isinstance(expression, Application):
@@ -168,6 +179,9 @@ fn append(list: &mut Vec<isize>, item: isize) -> &mut Vec<isize> {
     list.push(item);
     list
 }
+fn length<T>(container: &Vec<T>) -> isize {
+    container.len() as isize
+}
 fn range(start: isize, end: isize) -> Vec<isize> {
     let mut items = vec![];
     for i in start..end {
@@ -178,12 +192,6 @@ fn range(start: isize, end: isize) -> Vec<isize> {
 fn get_subscript(container: &mut Vec<isize>, index: isize) -> isize {
     container[index as usize]
 }
-fn print<T: Display>(printable: T) {
-    print!("{}", printable);
-}
-fn println<T: Display>(printable: T) {
-    println!("{}", printable);
-}
 
 // conjunction and disjunction
 fn and(a: bool, b: bool) -> bool {
@@ -193,10 +201,11 @@ fn or(a: bool, b: bool) -> bool {
     a || b
 }
 
-
 // Glitteral standard library IO
 fn print_integer(n: isize) { println!(\"{}\", n); }
 fn print_integer_list(l: &mut Vec<isize>) { println!(\"{:?}\", l); }
+fn print<T: Display>(printable: T) { print!("{}", printable); }
+fn println<T: Display>(printable: T) { println!("{}", printable); }
 
 fn main() {
 %s

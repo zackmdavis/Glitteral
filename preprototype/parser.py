@@ -116,6 +116,24 @@ class Conditional(Codeform):
             self.condition, self.consequent, self.alternative
         )
 
+class SingletrackedConditional(Codeform):
+    def __init__(self, condition, expressions):
+        super().__init__()
+        self.condition = condition
+        self.expressions = expressions
+
+        self.condition.statementlike = False
+
+    @property
+    def children(self):
+        return [self.condition] + self.expressions
+
+    def __repr__(self):
+        return "<{}: ({}, {}/{})>".format(
+            self.__class__.__name__,
+            self.condition, self.expressions
+        )
+
 class DeterminateIteration(Codeform):
     def __init__(self, index_identifier, iterable, body):
         super().__init__()
@@ -275,6 +293,9 @@ def parse_codeform(tokenstream):
                 raise ParsingException("Conditional expression must have 2 or "
                                        "3 arguments.")
             return Conditional(*rest)
+        elif first.value == "when":
+            condition, *body = rest
+            return SingletrackedConditional(condition, body)
         elif first.value == ":=":
             if len(rest) != 2:
                 raise ParsingException("Definition must have 2 arguments, got "

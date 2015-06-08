@@ -1,7 +1,7 @@
 (:= my_list [6 5 4 3 2 1])
 
 (:=λ misplaced? |first ^int second ^int| → ^bool
-   (greater first second))
+   (greater? first second))
 
 (:=λ bubblesort! |this_list ^[int]| → Void
    (for |pass_through_list (range 0 6)|

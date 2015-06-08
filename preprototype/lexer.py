@@ -53,6 +53,9 @@ class Keyword(Reserved):
 class If(Keyword):
     recognizer = re.compile(r"if$")
 
+class When(Keyword):
+    recognizer = re.compile(r"when$")
+
 class For(Keyword):
     recognizer = re.compile(r"for$")
 
@@ -240,7 +243,7 @@ class BaseLexer:
                     self._handle_tokenizing_error(self.sight, candidate)
         return self.tokens
 
-BASE_KEYWORDS = [If, For, Lambda, Def, SubscriptDef, Deflambda, Do]
+BASE_KEYWORDS = [If, When, For, Lambda, Def, SubscriptDef, Deflambda, Do]
 TYPE_SPECIFIERS = [
     IntegerSpecifer, StringSpecifier, BooleanSpecifier,
     IntegerListSpecifier, StringListSpecifier,
