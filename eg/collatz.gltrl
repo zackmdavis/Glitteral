@@ -1,0 +1,22 @@
+(:=λ modulo |a ^int n ^int| → ^int
+   (:= quotient (÷ a n))
+   (− a (⋅ quotient n)))
+
+(:=λ collatz_advance |n ^int| → ^int
+   (if (= (modulo n 2) 0)
+      (÷ n 2)
+      (+ (⋅ 3 n) 1)))
+
+(:=λ collatz_from_n |n ^int| → ^[int]
+   (:= counter 0)
+   (:= result n)
+   (:= sequence [n])
+   (while (≠ result 1)
+      (:= result (collatz_advance result))
+      (append! sequence result))
+   # XXX BROKEN this function's return type contains a borrowed value,
+   # but, &c., &c.
+   sequence)
+
+(for |i (range 1 21)|
+   (print_integer_list (collatz_from_n i)))

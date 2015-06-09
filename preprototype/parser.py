@@ -134,6 +134,24 @@ class SingletrackedConditional(Codeform):
             self.condition, self.expressions
         )
 
+class IndeterminateIteration(Codeform):
+    def __init__(self, condition, body):
+        super().__init__()
+        self.condition = condition
+        self.body = body
+
+        self.condition.statementlike = False
+
+    @property
+    def children(self):
+        return [self.condition] + self.body
+
+    def __repr__(self):
+        return "<{}: [{} {}]>".format(
+            self.__class__.__name__,
+            self.condition, self.body
+        )
+
 class DeterminateIteration(Codeform):
     def __init__(self, index_identifier, iterable, body):
         super().__init__()
@@ -359,6 +377,9 @@ def parse_codeform(tokenstream):
         elif first.value == "do":
             expressions = rest
             return DoBlock(expressions)
+        elif first.value == "while":
+            condition, *body = rest
+            return IndeterminateIteration(condition, body)
         elif first.value == "for":
             bindings, *body = rest
             index_identifier, iterable = bindings.elements

@@ -59,6 +59,9 @@ class When(Keyword):
 class For(Keyword):
     recognizer = re.compile(r"for$")
 
+class While(Keyword):
+    recognizer = re.compile(r"while$")
+
 class Lambda(Keyword):
     recognizer = re.compile(r"λ$")
 
@@ -249,7 +252,7 @@ class BaseLexer:
                     self._handle_tokenizing_error(self.sight, candidate)
         return self.tokens
 
-BASE_KEYWORDS = [If, When, For, Lambda, Def, SubscriptDef, Deflambda, Do]
+BASE_KEYWORDS = [If, When, For, While, Lambda, Def, SubscriptDef, Deflambda, Do]
 TYPE_SPECIFIERS = [
     IntegerSpecifer, StringSpecifier, BooleanSpecifier,
     IntegerListSpecifier, StringListSpecifier,

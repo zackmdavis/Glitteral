@@ -82,6 +82,13 @@ def generate_singletracked_conditional(one_conditional):
         )
     )
 
+def generate_indeterminate_iteration(iteration):
+    return ("""while %s {
+%s
+}""" % (generate_expression(iteration.condition),
+        '\n'.join(generate_expression(expression)
+                  for expression in iteration.body)))
+
 def generate_determinate_iteration(iteration):
     return "for &%s in %s.iter() { %s }" % (
         tuple(map(generate_expression,
@@ -156,6 +163,8 @@ def generate_expression(expression):
             return generate_conditional(expression)
         elif isinstance(expression, SingletrackedConditional):
             return generate_singletracked_conditional(expression)
+        elif isinstance(expression, IndeterminateIteration):
+            return generate_indeterminate_iteration(expression)
         elif isinstance(expression, DeterminateIteration):
             return generate_determinate_iteration(expression)
         elif isinstance(expression, Application):

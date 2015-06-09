@@ -27,6 +27,7 @@ global_environment = {
     'print!': BuiltinAtom("print"),
     'println!': BuiltinAtom("println"),
     '&': BuiltinAtom("and"),
+    '∨': BuiltinAtom("or"),
 
     # The Rust backend can naively implement some builtin functions as
     # prewritten Rust functions, but might need to do something
@@ -61,7 +62,7 @@ def propogate_environments(expression, statementlike=True):
         if isinstance(expression, NamedFunctionDefinition):
             for argument in expression.arguments:
                 child.local_environment[argument.value.value] = argument
-        if isinstance(expression, DeterminateIteration):
+        elif isinstance(expression, DeterminateIteration):
             child.local_environment[
                 expression.index_identifier.value] = (
                     IterInto(expression.iterable))
