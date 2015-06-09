@@ -70,7 +70,8 @@ def propogate_environments(expression, statementlike=True):
             (i+1 != len(expression.children)) and
             (not (isinstance(expression, Conditional) or
                   isinstance(expression, Application) or
-                  isinstance(expression, Sequential))))
+                  isinstance(expression, Sequential) or
+                  isinstance(expression, Associative))))
         propogate_environments(child, statementlike=child_is_statementlike)
 
 def annotate(expressionstream):

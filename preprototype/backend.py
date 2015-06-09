@@ -13,6 +13,11 @@ if os.environ.get("GLITTERAL_DEBUG"):
 class CodeGenerationException(Exception):
     ...
 
+class CodeGenerationNotImplementedException(
+        NotImplementedError, CodeGenerationException):
+    ...
+
+
 def rustify_type_specifier(type_specifier_atom):
     return {'^int': "isize", '^str': "&str", '^bool': "bool",
             '^[int]': "&mut Vec<isize>", None: "()"}[type_specifier_atom.value]
@@ -104,6 +109,20 @@ def generate_sequential(expression):
          close_delimiter]
     ) + (';' if expression.statementlike else '')
 
+def generate_associative(expression):
+    # TODO: what is our strategy going to be for Glitteral
+    # (immuatable) Hashtables?
+    #
+    # TODO: what is our strategy for generating Rust corresponding to
+    # a Glitteral associative, given that Rust didn't seem to have
+    # hashtable literals the last time I checked? Surely it's going to
+    # be some variant of creating a ::new() hashtable and then
+    # .insert()ing into it, but that means our Associative node needs
+    # to be annotated with what name it has, or assigned one
+    # automatically (whatever we do, it's probably be similar for
+    # anonymous functions).
+    raise CodeGenerationNotImplementedException("TODO")
+
 def represent_identifiable(identifier):
     try:
         identified = identifier.environment[identifier.value]
@@ -140,8 +159,10 @@ def generate_expression(expression):
             return generate_determinate_iteration(expression)
         elif isinstance(expression, Application):
             return generate_application(expression)
-    if isinstance(expression, Sequential):
+    elif isinstance(expression, Sequential):
         return generate_sequential(expression)
+    elif isinstance(expression, Associative):
+        return generate_associative(expression)
     elif isinstance(expression, Atom):
         if isinstance(expression, IdentifierAtom):
             return represent_identifiable(expression)

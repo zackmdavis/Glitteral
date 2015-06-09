@@ -216,6 +216,48 @@ class Vector(Sequential):
     open_delimiter = close_delimiter = '|'
 
 
+class Associative(Expression):
+    def __init__(self, associations):
+        super().__init__()
+        self.associations = associations
+
+    @property
+    def children(self):
+        return self.associations
+
+# Should this inherit from something? A key value pair shouldn't
+# really be its own expression independent of any Dictionary or
+# Hashtable literal. Could there be an argument for a common
+# superclass with Argument and iteration bindings strong than "I don't
+# really know what to do with any of these"?
+class Association:
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+        self.statementlike = False
+        self.key.statementlike = False
+        self.value.statementlike = False
+
+    @property
+    def children(self):
+        return [self.key, self.value]
+
+    def __repr__(self):
+        return "<{}: {} {};>".format(
+            self.__class__.__name__, self.key, self.value
+        )
+
+class Dictionary(Associative):
+    mutable = True
+    open_delimiter = '{'
+    close_delimiter = '}'
+
+class Hashtable(Associative):
+    open_delimiter = '<'
+    close_delimiter = '>'
+
+
 class Atom(Expression):
     def __init__(self, value):
         super().__init__()
@@ -345,6 +387,35 @@ def parse_sequential(tokenstream):
             elements.append(parse_expression(tokenstream))
     return sequential_class(elements)
 
+def parse_association(tokenstream):
+    key = parse_expression(tokenstream)
+    value = parse_expression(tokenstream)
+    association_delimiter = tokenstream.pop()
+    if not isinstance(association_delimiter, Semicolon):
+        raise ParsingException("Expected semicolon to separate associations")
+    return Association(key, value)
+
+def parse_associative(tokenstream):
+    open_delimiter = tokenstream.pop()
+    if not (isinstance(open_delimiter, AssociativeDelimiter) or
+            not isinstance(open_delimiter, OpenDelimiter)):
+        raise ParsingException("Expected an opening sequential delimiter ('{{' "
+                               "or '<'), got {}".format(open_delimiter))
+    if isinstance(open_delimiter, OpenBrace):
+        associative_class = Dictionary
+    # elif isinstance(open_delimiter, ... uh, we need to call the '<' something):
+    #     TODO
+    associations = []
+    done_here = False
+    # TODO: somehow unify with similar loop in `parse_sequential`??
+    while not done_here:
+        next_token = tokenstream.peek()
+        if isinstance(next_token, CloseDelimiter):
+            tokenstream.pop()
+            done_here = True
+        else:
+            associations.append(parse_association(tokenstream))
+    return associative_class(associations)
 
 def parse_expression(tokenstream):
     leading_token = tokenstream.peek()
@@ -359,6 +430,14 @@ def parse_expression(tokenstream):
         elif (isinstance(leading_token, OpenBracket) or
             isinstance(leading_token, Pipe)):
             return parse_sequential(tokenstream)
+        elif (isinstance(leading_token, OpenBrace) or
+              # still need to name the '<' thingy
+              False):
+            return parse_associative(tokenstream)
+        else:
+            raise ParsingException(
+                "Failed to advance from opening delimiter {}".format(
+                    leading_token))
     else:  # atoms
         expression_token = tokenstream.pop()
         if isinstance(expression_token, Keyword):

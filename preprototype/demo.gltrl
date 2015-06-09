@@ -3,14 +3,17 @@
 (:=λ first_plus_square_of_second |a ^int b ^int| → ^int
   (+ a (⋅ b b)))  # This is a comment.
 
+# (:= my_dictionary {"rah" 1; "hey" 2;})
+
 (:= my_list [1 2 3])
 (append! my_list 4)
 
 (if glitteral_is_splendid
-  (if (= (first_plus_square_of_second 1 2) 5)
-    (_:= my_list 0 10)
-    (print_integer 0))
-  (print_integer 0))
+  # (if (= (first_plus_square_of_second
+  #           (_ my_dictionary "rah") (_ my_dictionary "hey"))
+  #        5)
+    (if (= (first_plus_square_of_second 1 2) 5)
+       (_:= my_list 0 10)))
 
 (for |i my_list|
   (print_integer i))

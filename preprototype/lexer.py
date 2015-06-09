@@ -117,6 +117,9 @@ class CloseDelimiter(Token):
 class SequentialDelimiter(Token):
     ...
 
+class AssociativeDelimiter(Token):
+    ...
+
 class OpenParenthesis(OpenDelimiter):
     recognizer = re.compile(r"\($")
 
@@ -129,11 +132,14 @@ class OpenBracket(SequentialDelimiter, OpenDelimiter):
 class CloseBracket(SequentialDelimiter, CloseDelimiter):
     recognizer = re.compile(r"\]$")
 
-class OpenBrace(OpenDelimiter):
+class OpenBrace(AssociativeDelimiter, OpenDelimiter):
     recognizer = re.compile(r"\{$")
 
-class CloseBrace(CloseDelimiter):
+class CloseBrace(AssociativeDelimiter, CloseDelimiter):
     recognizer = re.compile(r"\}$")
+
+class Semicolon(Token):
+    recognizer = re.compile(";$")
 
 class Pipe(SequentialDelimiter, OpenDelimiter, CloseDelimiter):
     recognizer = re.compile(r"\|$")
@@ -254,6 +260,7 @@ TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
     OpenParenthesis, CloseParenthesis,
     OpenBracket, CloseBracket,
     OpenBrace, CloseBrace,
+    Semicolon,
     Pipe,
     StringLiteral, InternLiteral,
     IntegerLiteral,

@@ -35,6 +35,16 @@ class LexerTest(unittest.TestCase):
              IntegerLiteral("3"), CloseParenthesis(")")]
         )
 
+    def test_tokenize_dictionary(self):
+        self.assertEqual(
+            Lexer().tokenize('{"foo" 1; "bar" 2; "quux" 3;}'),
+            [OpenBrace("{"),
+             StringLiteral('"foo"'), IntegerLiteral("1"), Semicolon(";"),
+             StringLiteral('"bar"'), IntegerLiteral("2"), Semicolon(";"),
+             StringLiteral('"quux"'), IntegerLiteral("3"), Semicolon(";"),
+             CloseBrace("}")]
+        )
+
     def test_leading_whitespace_is_okay(self):
         Lexer().tokenize(" (foo)")
 
