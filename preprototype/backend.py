@@ -50,11 +50,18 @@ def generate_do_block(block):
         generate_expression(expression) for expression in block.expressions)
 
 def generate_definition(definition):
-    return "{}{} = {};".format(
+    return "{}{} = {}{}".format(
         ("let mut " if not definition.environment.get(
             definition.identifier.value) else ''),
         condescend_to_ascii(definition.identifier.value),
-        generate_expression(definition.identified)
+        generate_expression(definition.identified),
+        # XXX this is really genuinely awful (but the idea is that at the
+        # moment, associatives are the only kind of AST node whose
+        # instantitation needs to be spread over multiple Rust statements, so
+        # it's convenient for `generate_associative` to supply its own
+        # semicolons, whereas for other, more locally-contained, identifiables,
+        # we'll supply the semicolon here).
+        ';' if not isinstance(definition.identified, Associative) else ''
     )
 
 def generate_subscript_assignment(assignment):
@@ -117,19 +124,18 @@ def generate_sequential(expression):
          close_delimiter]
     ) + (';' if expression.statementlike else '')
 
-def generate_associative(expression):
+def generate_associative(associative):
     # TODO: what is our strategy going to be for Glitteral
     # (immuatable) Hashtables?
-    #
-    # TODO: what is our strategy for generating Rust corresponding to
-    # a Glitteral associative, given that Rust didn't seem to have
-    # hashtable literals the last time I checked? Surely it's going to
-    # be some variant of creating a ::new() hashtable and then
-    # .insert()ing into it, but that means our Associative node needs
-    # to be annotated with what name it has, or assigned one
-    # automatically (whatever we do, it's probably be similar for
-    # anonymous functions).
-    raise CodeGenerationNotImplementedException("TODO")
+    return "HashMap::new();\n{}\n".format(
+        '\n'.join(
+            "{}.insert({}, {});".format(
+                generate_expression(associative.identifier),
+                generate_expression(association.key),
+                generate_expression(association.value))
+            for association in associative.associations
+        )
+    )
 
 def represent_identifiable(identifier):
     try:
@@ -192,6 +198,7 @@ def generate_code(expressions):
     logger.debug("expressions for which to generate code: %s", expressions)
     return """
 use std::fmt::Display;
+use std::collections::HashMap;
 
 // Glitteral standard library arithmetic
 fn integers_equal(a: isize, b: isize) -> bool { a == b }

@@ -67,6 +67,12 @@ def propogate_environments(expression, statementlike=True):
                 expression.index_identifier.value] = (
                     IterInto(expression.iterable))
 
+        # "Some" Glitteral backends will require associative nodes to
+        # know what identifier they've been assigned to (if any).
+        if (isinstance(expression, Definition) and
+            isinstance(child, Associative)):
+            child.identifier = expression.identifier
+
         child_is_statementlike = (
             (i+1 != len(expression.children)) and
             (not (isinstance(expression, Conditional) or

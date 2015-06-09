@@ -44,3 +44,12 @@ class FrontendTestCase(unittest.TestCase):
             List([IntegerAtom(1), IntegerAtom(2), IntegerAtom(3)]),
             for_i_in_a.global_environment['a']
         )
+
+    def test_dictionary_literal_annotated_with_definition(self):
+        source = """
+        (:= dee {"rah" 1; "hey" 2;})"""
+        annotated = list(annotate(parse(lex(source))))
+        def_dee, = annotated
+        dictionary_literal_node = def_dee.identified
+        self.assertEqual(IdentifierAtom("dee"),
+                         dictionary_literal_node.identifier)

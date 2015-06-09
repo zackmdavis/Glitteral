@@ -55,6 +55,9 @@ class Definition(Codeform):
         self.identifier = identifier
         self.identified = identified
 
+        # XXX??
+        self.identifier.statementlike = False
+
     @property
     def children(self):
         return [self.identifier, self.identified]
@@ -238,6 +241,8 @@ class Associative(Expression):
     def __init__(self, associations):
         super().__init__()
         self.associations = associations
+
+        self.identifier = None
 
     @property
     def children(self):

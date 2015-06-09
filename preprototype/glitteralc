@@ -39,6 +39,7 @@ if __name__ == "__main__":
          '--allow', "dead_code",
          '--allow', "non_snake_case",
          '--allow', "unused_variables",
+         '--allow', "unused_imports",
          '--allow', "unused_mut",
          '--crate-name', output_name,
          ir_name]
