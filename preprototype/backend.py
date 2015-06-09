@@ -50,8 +50,9 @@ def generate_do_block(block):
         generate_expression(expression) for expression in block.expressions)
 
 def generate_definition(definition):
-    return "let {} {} = {};".format(
-        'mut' if definition.identified.mutable else '',
+    return "{}{} = {};".format(
+        ("let mut " if not definition.environment.get(
+            definition.identifier.value) else ''),
         condescend_to_ascii(definition.identifier.value),
         generate_expression(definition.identified)
     )
