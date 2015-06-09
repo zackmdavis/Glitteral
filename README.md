@@ -7,23 +7,21 @@
 ### Actual demonstration
 
 ```
-$ cat demo.gltrl
+$ cat demo.gltrl 
 (:= glitteral_is_splendid Truth)
 
 (:=λ first_plus_square_of_second |a ^int b ^int| → ^int
-  (+ a (⋅ b b)))  # This is a comment.
+   (+ a (⋅ b b)))  # This is a comment.
 
 (:= my_list [1 2 3])
 (append! my_list 4)
 
-(if glitteral_is_splendid
-  (if (= (first_plus_square_of_second 1 2) 5)
-    (_:= my_list 0 10)
-    (print_integer 0))
-  (print_integer 0))
+(when glitteral_is_splendid
+   (if (= (first_plus_square_of_second 1 2) 5)
+      (_:= my_list 0 10)))
 
 (for |i my_list|
-  (print_integer i))
+   (print_integer i))
 $ ./glitteralc demo.gltrl 
 $ ./demo 
 10
@@ -44,7 +42,7 @@ $ ./demo
 ["foo" "bar" "quux"]  # list (mutable) 
 |"foo" "bar" "quux"|  # vector (immutable) 
 
-# Mappings
+# Associatives
 {'foo' 1; 'bar' 2; 'quux' 3;}  # dictionary (mutable) 
 <'foo' 1; 'bar' 2; 'quux' 3;>  # hashtable (immutable) 
 
@@ -63,25 +61,23 @@ Void
 (÷ 2 3)  # division (Unicodepoint 00F7)
 
 # type annotation names?
-# [] || {} <> int float str intern boolean codeform symbol
+# [] || {} <> int float str intern bool
 
 # regex literals??
 /fooo*/ /barr?/
 
 # anonymous functions
-(λ positional-args keyword-args body)
+(λ argument-container body)
 
 # named function definitions
-(:=λ name "docstring" positional-args keyword-args body)
+(:=λ name argument-container body)
 
 # Both underscores and hyphens are legal in identifier names, but
 # (contrary to what patriotic fools will tell you is essential to
 # Lisp-likeness) _underscores_ are strongly encouraged except where you
 # would actually use a hyphen when writing English.
 
-(:=λ my_super-great_function
-      "This is my function."
-      |foo ^int bar ^float| → ^float
+(:=λ my_super-great_function |foo ^int bar ^float| → ^float
   (let |foo_times_two (⋅ 2 foo)
         quux_of_bar (quux bar)|
      (÷ foo_times_two quux_of_bar)))
@@ -101,6 +97,18 @@ Void
 # and "associative glitter"—
 
 (my_function_with_kwargs **<'foo' "bar"; 'quux' 2;>)
+
+# SYNTAX REFORM—
+
+# (Thanks to Rory O'Kane's suggestions in Issue #1.) While retaining
+# traditional everything-is-an-expression semantics, fundamental
+# language control-flow constructs (if, while, for, :=, :=λ, but maybe
+# not _:=) will be indicated by indentation (three spaces), whereas
+# function calls remain traditional s-expressions.
+
+when glitteral_is_splendid
+   if (= (first_plus_square_of_second 1 2) 5)
+      (_:= my_list 0 10)
 
 ```
 
