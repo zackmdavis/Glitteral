@@ -114,18 +114,28 @@ def generate_special_builtin_dispatched_application(application):
         "get_subscript"):
         container_identifier, key_identifier = application.arguments
         container = application.environment.get(container_identifier.value)
-        if isinstance(container, List):
+        if isinstance(container, List) or (
+                # XXX MORE GRATUITOUS COMPLEXITY: we've been treating function
+                # parameters differently (wrapped up in an Argument)
+                isinstance(container, Argument) and
+                container.type_specifier.value[:2] == "^["):
             return "list_get_subscript({}){}".format(
                 ', '.join(generate_expression(arg)
                           for arg in application.arguments),
                 ';' if application.statementlike else ''
             )
-        elif isinstance(container, Dictionary):
+        elif isinstance(container, Dictionary) or (
+                isinstance(container, Argument) and
+                container.type_specifier.value[:2] == "^{"):
             return "str_int_dictionary_get_subscript({}){}".format(
                 ', '.join(generate_expression(arg)
                           for arg in application.arguments),
                 ';' if application.statementlike else ''
             )
+        else:
+            raise CodeGenerationException("_ called with first argument {}, "
+                                          "expected Container "
+                                          "type".format(container))
 
 def generate_application(application):
     if getattr(application.environment.get(application.function.value),
@@ -219,7 +229,11 @@ def generate_expression(expression):
 
 def generate_code(expressions):
     logger.debug("expressions for which to generate code: %s", expressions)
-    with open("builtins.rs") as builtins_rs:
+    with open(
+            os.path.join(
+                os.path.dirname(
+                    os.path.realpath(__file__)),
+                "builtins.rs")) as builtins_rs:
         prelude = builtins_rs.read()
     return """%s
 
