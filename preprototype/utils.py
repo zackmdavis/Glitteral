@@ -1,5 +1,7 @@
 import functools
 import itertools
+import logging
+import os
 
 class LookaheadStream:
     def __init__(self, generator):
@@ -30,3 +32,22 @@ def npartitions(n, sliceable):
     return zip(*(sliceable[slice(i, None, n)] for i in range(n)))
 
 twopartitions = functools.partial(npartitions, 2)
+
+def to_int_or_none(intable_maybe):
+    try:
+        return int(intable_maybe)
+    except ValueError:
+        return None
+
+def get_logger(name):
+    logger = logging.getLogger(name)
+    glitteral_debug = os.environ.get('GLITTERAL_DEBUG', "NOTSET")
+    level_from_environment = getattr(
+        logging, glitteral_debug,
+        to_int_or_none(glitteral_debug)
+    )
+    if level_from_environment is None:
+        level_from_environment = logging.DEBUG
+    logger.setLevel(level_from_environment)
+    logger.addHandler(logging.StreamHandler())
+    return logger

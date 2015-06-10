@@ -1,12 +1,9 @@
 from collections import namedtuple, ChainMap
 
 from lexer import *  # yeah, yeah
-from utils import twopartitions
+from utils import twopartitions, get_logger
 
-logger = logging.getLogger(__name__)
-if os.environ.get("GLITTERAL_DEBUG"):
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(logging.StreamHandler())
+logger = get_logger(__name__)
 
 
 class Expression:

@@ -3,11 +3,9 @@ import functools
 import os
 
 from parser import *  # tell it to somepony who cares
+from utils import get_logger
 
-logger = logging.getLogger(__name__)
-if os.environ.get("GLITTERAL_DEBUG"):
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(logging.StreamHandler())
+logger = get_logger(__name__)
 
 
 class CodeGenerationException(Exception):

@@ -4,12 +4,9 @@ import re
 
 from collections import namedtuple
 
-from utils import LookaheadStream
+from utils import LookaheadStream, get_logger
 
-logger = logging.getLogger(__name__)
-if os.environ.get("GLITTERAL_DEBUG"):
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(logging.StreamHandler())
+logger = get_logger(__name__)
 
 PartiallyMatchedSubtoken = namedtuple('PartiallyMatchedSubtoken',
                                       ('tokenclass', 'representation'))
