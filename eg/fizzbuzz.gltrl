@@ -5,7 +5,7 @@
    (− a (⋅ quotient n)))
 
 (:=λ fizzbuzz |n ^int| → Void
-   (for |i (range 1 n)|
+   (for |i (range 1 (+ n 1))|
       (if (= (modulo i 3) 0)
          (print "fizz"))
       (if (= (modulo i 5) 0)
@@ -15,3 +15,35 @@
          (println ""))))
 
 (fizzbuzz 30)
+
+# Expected output—
+# 1
+# 2
+# fizz
+# 4
+# buzz
+# fizz
+# 7
+# 8
+# fizz
+# buzz
+# 11
+# fizz
+# 13
+# 14
+# fizzbuzz
+# 16
+# 17
+# fizz
+# 19
+# buzz
+# fizz
+# 22
+# 23
+# fizz
+# buzz
+# 26
+# fizz
+# 28
+# 29
+# fizzbuzz
