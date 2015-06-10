@@ -23,8 +23,8 @@ global_environment = {
     'print_integer_list': BuiltinAtom("print_integer_list"),
 
     # TODO: variadics?
-    'print!': BuiltinAtom("print"),
-    'println!': BuiltinAtom("println"),
+    'print': BuiltinAtom("print"),
+    'println': BuiltinAtom("println"),
     '&': BuiltinAtom("and"),
     '∨': BuiltinAtom("or"),
 

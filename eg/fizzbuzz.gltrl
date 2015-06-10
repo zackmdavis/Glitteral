@@ -7,11 +7,11 @@
 (:=λ fizzbuzz |n ^int| → Void
    (for |i (range 1 n)|
       (if (= (modulo i 3) 0)
-         (print! "fizz"))
+         (print "fizz"))
       (if (= (modulo i 5) 0)
-         (print! "buzz"))
+         (print "buzz"))
       (if (& (≠ (modulo i 3) 0) (≠ (modulo i 5) 0))
-         (println! i)
-         (println! ""))))
+         (println i)
+         (println ""))))
 
 (fizzbuzz 30)

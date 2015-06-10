@@ -7,16 +7,15 @@
       (÷ n 2)
       (+ (⋅ 3 n) 1)))
 
-(:=λ collatz_from_n |n ^int| → ^[int]
-   (:= counter 0)
+(:=λ collatz_from_n |n ^int| → Void
    (:= result n)
-   (:= sequence [n])
+   (print result)
+   (print " ")
    (while (≠ result 1)
       (:= result (collatz_advance result))
-      (append! sequence result))
-   # XXX BROKEN this function's return type contains a borrowed value,
-   # but, &c., &c.
-   sequence)
+      (print result)
+      (print " "))
+   (println ""))
 
 (for |i (range 1 21)|
-   (print_integer_list (collatz_from_n i)))
+   (collatz_from_n i))
