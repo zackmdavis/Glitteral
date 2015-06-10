@@ -1,0 +1,5 @@
+(println "Hello! What is your name?")
+(:= their_name (input))
+(print "Hello, ")
+(print their_name)
+(println "!")

@@ -19,12 +19,15 @@ global_environment = {
     'not_greater?': BuiltinAtom("not_greater"),
     'not_less?': BuiltinAtom("not_less"),
     'range': BuiltinAtom("range"),
-    'print_integer': BuiltinAtom("print_integer"),
-    'print_integer_list': BuiltinAtom("print_integer_list"),
 
     # TODO: variadics?
+    # TODO: unify prints (glitteralc should be smart enough to
+    # dispatch on type, or builtins.rs might be able to do something
+    # with traits?)
     'print': BuiltinAtom("print"),
     'println': BuiltinAtom("println"),
+    'println_container': BuiltinAtom("println_container"),
+    'input': BuiltinAtom("input"),
     '&': BuiltinAtom("and"),
     '∨': BuiltinAtom("or"),
 

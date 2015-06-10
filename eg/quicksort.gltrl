@@ -23,11 +23,11 @@
    pivot_landing)
 
 (:=λ quicksort! |our_list ^[int] start_index ^int end_index ^int| → Void
-   (print_integer_list our_list)  # debug
+   (println_container our_list)  # debug
    (when (less? start_index end_index)
       (:= pivot_point (partition! our_list start_index end_index))
       (quicksort! our_list start_index (− pivot_point 1))
       (quicksort! our_list (+ pivot_point 1) end_index)))
 
 (quicksort! my_list 0 4)
-(print_integer_list my_list)
+(println_container my_list)

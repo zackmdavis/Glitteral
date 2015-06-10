@@ -1,3 +1,4 @@
+use std::io;
 use std::fmt::Display;
 use std::collections::HashMap;
 
@@ -57,6 +58,13 @@ fn or(a: bool, b: bool) -> bool {
 
 // Glitteral standard library IO
 fn print_integer(n: isize) { println!("{}", n); }
-fn print_integer_list(l: &mut Vec<isize>) { println!("{:?}", l); }
+fn println_container(l: &mut Vec<isize>) { println!("{:?}", l); }
 fn print<T: Display>(printable: T) { print!("{}", printable); }
 fn println<T: Display>(printable: T) { println!("{}", printable); }
+fn input() -> String {
+    let mut input_buffer = String::new();
+    io::stdin()
+        .read_line(&mut input_buffer)
+        .ok().expect("Glitteral IO failure");
+    input_buffer.trim().to_string()
+}

@@ -12,11 +12,11 @@
                (:= temp (_ this_list i))
                (_:= this_list i (_ this_list (+ i 1)))
                (_:= this_list i_plus_one temp)
-               (print_integer_list this_list)))))
+               (println_container this_list)))))
    Void)
 
 (bubblesort! my_list)
-(print_integer_list my_list)
+(println_container my_list)
 
 # Expected output—
 # [5, 2, 6, 9, 7, 3, 1, 0, 8, 4]
