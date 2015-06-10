@@ -34,6 +34,9 @@ def condescend_to_ascii(identifier):
         identifier
     )
 
+def semicolon_if_statementlike(expression):
+    return ';' if getattr(expression, 'statementlike') else ''
+
 def generate_named_function_definition(definition):
     return """fn %s(%s) -> %s {
 %s
@@ -122,7 +125,7 @@ def generate_special_builtin_dispatched_application(application):
             return "list_get_subscript({}){}".format(
                 ', '.join(generate_expression(arg)
                           for arg in application.arguments),
-                ';' if application.statementlike else ''
+                semicolon_if_statementlike(application)
             )
         elif isinstance(container, Dictionary) or (
                 isinstance(container, Argument) and
@@ -130,7 +133,7 @@ def generate_special_builtin_dispatched_application(application):
             return "str_int_dictionary_get_subscript({}){}".format(
                 ', '.join(generate_expression(arg)
                           for arg in application.arguments),
-                ';' if application.statementlike else ''
+                semicolon_if_statementlike(application)
             )
         else:
             raise CodeGenerationException("_ called with first argument {}, "
@@ -144,18 +147,18 @@ def generate_application(application):
     return "{}({}){}".format(
         generate_expression(application.function),  # XX
         ', '.join(generate_expression(arg) for arg in application.arguments),
-        ';' if application.statementlike else ''
+        semicolon_if_statementlike(application)
     )
 
-def generate_sequential(expression):
+def generate_sequential(sequential):
     type_to_delimiter = {List: ('vec![', ']'), Vector: ('[', ']')}
-    open_delimiter, close_delimiter = type_to_delimiter[type(expression)]
+    open_delimiter, close_delimiter = type_to_delimiter[type(sequential)]
     return ''.join(
         [open_delimiter,
          ', '.join(generate_expression(element)
-                   for element in expression.elements),
+                   for element in sequential.elements),
          close_delimiter]
-    ) + (';' if expression.statementlike else '')
+    ) + semicolon_if_statementlike(sequential)
 
 def generate_associative(associative):
     # TODO: what is our strategy going to be for Glitteral
@@ -178,15 +181,15 @@ def represent_identifiable(identifier):
             "{} not found in environment".format(identifier.value)) from e
     if isinstance(identified, BuiltinAtom):
         return "{}{}".format(identified.value,
-                             ';' if identifier.statementlike else '')
+                             semicolon_if_statementlike(identifier))
     else:
         underidentifier = condescend_to_ascii(identifier.value)
         if getattr(identified, "mutable", None):
             return "&mut {}{}".format(underidentifier,
-                                      ';' if identifier.statementlike else '')
+                                      semicolon_if_statementlike(identifier))
         else:
             return "{}{}".format(underidentifier,
-                                 ';' if identifier.statementlike else '')
+                                 semicolon_if_statementlike(identifier))
 
 def generate_expression(expression):
     if isinstance(expression, Codeform):
@@ -217,15 +220,15 @@ def generate_expression(expression):
             return represent_identifiable(expression)
         elif isinstance(expression, IntegerAtom):
             return "{}isize{}".format(expression.value,
-                                      ';' if expression.statementlike else '')
+                                      semicolon_if_statementlike(expression))
         elif isinstance(expression, BooleanAtom):
             return ("true{}" if expression.value else "false{}").format(
-                ';' if expression.statementlike else '')
+                semicolon_if_statementlike(expression))
         elif isinstance(expression, VoidAtom):
-            return "(){}".format(';' if expression.statementlike else '')
+            return "(){}".format(semicolon_if_statementlike(expression))
         elif isinstance(expression, StringAtom):
             return '"{}{}"'.format(expression.value,
-                                   ';' if expression.statementlike else '')
+                                   semicolon_if_statementlike(expression))
 
 def generate_code(expressions):
     logger.debug("expressions for which to generate code: %s", expressions)
