@@ -13,17 +13,19 @@ from backend import generate_code
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('source_name', help="file to compile")
+    arg_parser.add_argument('source_path', help="file to compile")
     arg_parser.add_argument('--just-rust', action='store_true',
                             help="print generated Rust, but don't compile")
     args = arg_parser.parse_args()
 
-    source_name = args.source_name
-    if not source_name.endswith(".gltrl"):
+    source_path = args.source_path
+    source_directory, source_filename = os.path.split(source_path)
+    if not source_filename.endswith(".gltrl"):
         print("Glitteral source files must have the .gltrl extension.")
         sys.exit(1)
-    output_name = source_name[:-6]  # less ".gltrl"
-    with open(sys.argv[1]) as source_file:
+
+    output_name = source_filename[:-6]  # less ".gltrl"
+    with open(source_path) as source_file:
         source = source_file.read()
 
     generated_code = generate_code(annotate(parse(lex(source))))
@@ -31,8 +33,9 @@ if __name__ == "__main__":
         print(generated_code)
         sys.exit(0)
 
-    ir_name = "__{}_compiled.rs".format(source_name)
-    with open(ir_name, 'w') as code_file:
+    ir_filename = "__{}_compiled.rs".format(source_filename)
+    ir_path = os.path.join(source_directory, ir_filename)
+    with open(ir_path, 'w') as code_file:
         code_file.write(generated_code)
     exit_code = subprocess.call(
         ['rustc',
@@ -42,6 +45,7 @@ if __name__ == "__main__":
          '--allow', "unused_imports",
          '--allow', "unused_mut",
          '--crate-name', output_name,
-         ir_name]
+         '--out-dir', source_directory,
+         ir_path]
     )
     sys.exit(exit_code)
