@@ -35,11 +35,10 @@ class Token:
                                  self.representation)
 
 
-# XXX TODO FIXME: we should take the few moments of research to look
-# up a way to systematically define the right unicode identifier
-# charclass, rather than just adding ad hoc special characters here as
-# we need them
-IDENTIFIER_CHARCLASS = r"[-A-Za-z_:λ=+−⋅÷!?&≠∨]"
+# word characters, plus hyphen, plus ?! for predicates and living
+# dangerously, plus :=≠+−⋅÷&∨∀∃ to support our assignment, math, and
+# logical operations
+IDENTIFIER_CHARS = r"\w\-:=≠+−⋅÷!?&∨∀∃"
 
 class Reserved(Token):
     ...
@@ -59,30 +58,33 @@ class For(Keyword):
 class While(Keyword):
     recognizer = re.compile(r"while$")
 
+class Do(Keyword):
+    recognizer = re.compile(r"do$")
+
 class Lambda(Keyword):
     recognizer = re.compile(r"λ$")
 
 class Def(Keyword):
     recognizer = re.compile(r":=$")
 
-class SubscriptDef(Keyword):
-    recognizer = re.compile(r"_:=$")
-
 class Deflambda(Keyword):
     recognizer = re.compile(r":=λ$")
 
-class Do(Keyword):
-    recognizer = re.compile(r"do$")
+class SubscriptDef(Keyword):
+    recognizer = re.compile(r"_:=$")
+
 
 class Arrow(Keyword):
     recognizer = re.compile(r"→$")
 
 class Identifier(Token):
-    recognizer = re.compile("{}+$".format(IDENTIFIER_CHARCLASS))
-
+    # simplify regex-based distinguishing of numeric literals from
+    # identifiers by preventing the latter from starting with a digit,
+    # as simulated by a negative lookahead assertion
+    recognizer = re.compile("(?![0-9])[{0}][{0}]*$".format(IDENTIFIER_CHARS))
 
 class TypeSpecifier(Reserved):
-    prefix_recognizer = re.compile(r"\^{}*$".format(IDENTIFIER_CHARCLASS))
+    prefix_recognizer = re.compile(r"\^\w*$")
 
 def type_specifier_class(type_name, type_specifier):
     return type(
@@ -169,6 +171,7 @@ class Commentary(Token):
 
     prefix_recognizer = re.compile(r"#.*$")
     recognizer = re.compile(r"#.*\n$")
+
 
 class EndOfFile(Token):
     recognizer = re.compile(r"█$")

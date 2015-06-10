@@ -48,6 +48,16 @@ class LexerTest(unittest.TestCase):
     def test_leading_whitespace_is_okay(self):
         Lexer().tokenize(" (foo)")
 
+    def test_integers_in_identifiers(self):
+        self.assertEqual(
+            Lexer().tokenize("foo2"),
+            [Identifier("foo2")]
+        )
+        self.assertNotEqual(
+            Lexer().tokenize("2foo"),
+            [Identifier("2foo")]
+        )
+
     def test_recognize_keyword(self):
         self.assertEqual(Lexer().tokenize(":="),
                          [Def(":=")])

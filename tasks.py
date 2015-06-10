@@ -9,11 +9,9 @@ def compile(sourcefile, ir=False):
         # connected to an actual terminal
         pty=True)
 
-def eg_executable_paths():
-    for filename in os.listdir("eg"):
-        filepath = os.path.join("eg", filename)
-        if os.access(filepath, os.X_OK) and not os.path.isdir(filepath):
-            yield filepath
+def examplestream():
+    for filename in filter(lambda fn: fn.endswith(".gltrl"), os.listdir("eg")):
+        yield filename[:-6]
 
 @task
 def clean():
@@ -23,13 +21,16 @@ def clean():
     # clean compiled executables
     print("cleaning executables ...")
     run("rm -f preprototype/demo")
-    for executable_path in eg_executable_paths():
-        os.unlink(executable_path)
+    for example_name in examplestream():
+        executable_path = os.path.join("eg", example_name)
+        if os.access(executable_path, os.X_OK):
+            print("removing {}".format(executable_path))
+            os.unlink(executable_path)
     print("clean!")
 
 @task
 def test():
-    print("running internal tests ..")
+    print("running internal tests ...")
     run("cd preprototype/tests; python3 -m unittest")
     print("running output tests ...")
     run("cd eg/tests; python3 -m unittest")
@@ -40,5 +41,11 @@ def demo(ir=False):
 
 @task
 def eg(example, ir=False):
-    print("compiling {} ...".format(example))
-    compile("eg/{}.gltrl".format(example), ir=ir)
+    if example == "all":
+        print("compiling all demos ...")
+        for example_name in examplestream():
+            print("compiling {} ...".format(example_name))
+            compile("eg/{}.gltrl".format(example_name), ir=ir)
+    else:
+        print("compiling {} ...".format(example))
+        compile("eg/{}.gltrl".format(example), ir=ir)
