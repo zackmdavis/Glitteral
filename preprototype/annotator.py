@@ -21,7 +21,6 @@ global_environment = {
     'range': BuiltinAtom("range"),
     'print_integer': BuiltinAtom("print_integer"),
     'print_integer_list': BuiltinAtom("print_integer_list"),
-    '_': BuiltinAtom("get_subscript"),
 
     # TODO: variadics?
     'print!': BuiltinAtom("print"),
@@ -34,6 +33,7 @@ global_environment = {
     # cleverer for builtins with polymorphic arguments or other cases
     # where Glitteral wants different semantics (or can we smooth over
     # some of this with traits??) ...
+    '_': BuiltinAtom("get_subscript", special=True),
 }
 
 class IterInto:

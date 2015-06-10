@@ -107,7 +107,30 @@ def generate_determinate_iteration(iteration):
                    ),)
     )
 
+def generate_special_builtin_dispatched_application(application):
+    # XXX this function and everything around it is dreadful in more ways than
+    # one
+    if (application.environment.get(application.function.value).value ==
+        "get_subscript"):
+        container_identifier, key_identifier = application.arguments
+        container = application.environment.get(container_identifier.value)
+        if isinstance(container, List):
+            return "list_get_subscript({}){}".format(
+                ', '.join(generate_expression(arg)
+                          for arg in application.arguments),
+                ';' if application.statementlike else ''
+            )
+        elif isinstance(container, Dictionary):
+            return "str_int_dictionary_get_subscript({}){}".format(
+                ', '.join(generate_expression(arg)
+                          for arg in application.arguments),
+                ';' if application.statementlike else ''
+            )
+
 def generate_application(application):
+    if getattr(application.environment.get(application.function.value),
+               'special', None):
+        return generate_special_builtin_dispatched_application(application)
     return "{}({}){}".format(
         generate_expression(application.function),  # XX
         ', '.join(generate_expression(arg) for arg in application.arguments),
@@ -227,8 +250,23 @@ fn range(start: isize, end: isize) -> Vec<isize> {
     }
     items
 }
-fn get_subscript(container: &mut Vec<isize>, index: isize) -> isize {
+
+// special
+fn list_get_subscript(container: &mut Vec<isize>, index: isize) -> isize {
     container[index as usize]
+}
+
+// fn dictionary_get_subscript<K: Eq + Hash + Clone, V>(container: &mut HashMap<K, V>, key: &K) -> V {
+//     *container.get(&key).unwrap().clone()
+// }
+//
+// XXX TODO FIXME: we would really prefer to use a generic hashmap rather than
+// artificially constrain the types of Glitteral associatives or repeat the same
+// function with different types several times, but have temporarily tired of
+// beating our fists against the iron wall of "`cannot move out of borrowed
+// content`"
+fn str_int_dictionary_get_subscript(container: &mut HashMap<&str, isize>, key: &str) -> isize {
+    *container.get(key).unwrap()
 }
 
 // conjunction and disjunction
