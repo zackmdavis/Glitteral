@@ -1,22 +1,25 @@
-(:= glitteral_is_splendid Truth)
+# XXX ASPIRATIONAL: the goal is for this code to work after the
+# appropriate syntax changes
 
-(:=λ first_plus_square_of_second |a ^int b ^int| → ^int
+:= glitteral_is_splendid Truth
+
+:=λ first_plus_square_of_second |a ^int b ^int| → ^int
   (+ a (⋅ b b)))  # This is a comment.
 
-(:= my_list [1 2 3])
+:= my_list [1 2 3]
 (append! my_list 4)
 
-(:= my_dictionary {"rah" 1; "hey" 2; "literacy" 3;})
+:= my_dictionary {"rah" 1; "hey" 2; "literacy" 3;}
 
 (println (_ my_dictionary "literacy"))
 (println (_ my_list 0))
 (println "")
 
-(if glitteral_is_splendid
-  (if (= (first_plus_square_of_second
-            (_ my_dictionary "rah") (_ my_dictionary "hey"))
-         5)
-       (_:= my_list 0 10)))
+if glitteral_is_splendid—
+   if (= (first_plus_square_of_second (_ my_dictionary "rah")
+                                      (_ my_dictionary "hey"))
+         5)—
+      _:= my_list 0 10
 
-(for |i my_list|
-  (print i))
+for |i my_list|—
+  (print i)

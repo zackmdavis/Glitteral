@@ -1,19 +1,21 @@
-(:= my_list [5 6 2 9 7 3 1 0 8 4])
+# ASPIRATIONAL FOR THE MOMENT
 
-(:=λ misplaced? |first ^int second ^int| → ^bool
-   (greater? first second))
+:= my_list [5 6 2 9 7 3 1 0 8 4]
 
-(:=λ bubblesort! |this_list ^[int]| → Void
-   (for |pass_through_list (range 0 10)|
-      (for |i (range 0 9)|
-         (if (misplaced? (_ this_list i) (_ this_list (+ i 1)))
-            (do
-               (:= i_plus_one (+ i 1))
-               (:= temp (_ this_list i))
-               (_:= this_list i (_ this_list (+ i 1)))
-               (_:= this_list i_plus_one temp)
-               (println_container this_list)))))
-   Void)
+:=λ misplaced? |first ^int second ^int| → ^bool
+   (greater? first second)
+
+:=λ bubblesort! |this_list ^[int]| → Void
+   for |pass_through_list (range 0 10)|—
+      for |i (range 0 9)|—
+         if (misplaced? (_ this_list i) (_ this_list (+ i 1)))—
+            do
+               := i_plus_one (+ i 1)
+               := temp (_ this_list i)
+               _:= this_list i (_ this_list (+ i 1))
+               _:= this_list i_plus_one temp
+               (println_container this_list)
+   Void
 
 (bubblesort! my_list)
 (println_container my_list)
