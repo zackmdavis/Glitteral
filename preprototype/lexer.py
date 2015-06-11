@@ -74,6 +74,9 @@ class SubscriptDef(Keyword):
     recognizer = re.compile(r"_:=$")
 
 
+class Dash(Reserved):
+    recognizer = re.compile(r"—$")
+
 class Arrow(Keyword):
     recognizer = re.compile(r"→$")
 
@@ -110,10 +113,13 @@ class StringListSpecifier(TypeSpecifier):
     recognizer = re.compile(r"\^\[str]$")
 
 
-class OpenDelimiter(Token):
+class Delimiter(Token):
     ...
 
-class CloseDelimiter(Token):
+class OpenDelimiter(Delimiter):
+    ...
+
+class CloseDelimiter(Delimiter):
     ...
 
 class SequentialDelimiter(Token):
@@ -125,26 +131,54 @@ class AssociativeDelimiter(Token):
 class OpenParenthesis(OpenDelimiter):
     recognizer = re.compile(r"\($")
 
+    @property
+    def opposite(self):
+        return CloseParenthesis
+
 class CloseParenthesis(CloseDelimiter):
     recognizer = re.compile(r"\)$")
+
+    @property
+    def opposite(self):
+        return OpenParenthesis
 
 class OpenBracket(SequentialDelimiter, OpenDelimiter):
     recognizer = re.compile(r"\[$")
 
+    @property
+    def opposite(self):
+        return CloseBracket
+
 class CloseBracket(SequentialDelimiter, CloseDelimiter):
     recognizer = re.compile(r"\]$")
+
+    @property
+    def opposite(self):
+        return OpenBracket
 
 class OpenBrace(AssociativeDelimiter, OpenDelimiter):
     recognizer = re.compile(r"\{$")
 
+    @property
+    def opposite(self):
+        return CloseBrace
+
 class CloseBrace(AssociativeDelimiter, CloseDelimiter):
     recognizer = re.compile(r"\}$")
+
+    @property
+    def opposite(self):
+        return OpenBrace
 
 class Semicolon(Token):
     recognizer = re.compile(";$")
 
 class Pipe(SequentialDelimiter, OpenDelimiter, CloseDelimiter):
     recognizer = re.compile(r"\|$")
+
+    @property
+    def opposite(self):
+        return Pipe
 
 class StringLiteral(Token):
     prefix_recognizer = re.compile(r'"[^"]*$')
@@ -180,6 +214,11 @@ class EndOfFile(Token):
 class TokenizingException(ValueError):
     ...
 
+class PreparsingException(Exception):
+    # TODO? raise this if we can detect an error during the preparsing of
+    # delimiters that we do for significant whitespace purposes
+    ...
+
 class BaseLexer:
     def __init__(self, tokenclasses):
         self.tokenclasses = tokenclasses
@@ -189,12 +228,24 @@ class BaseLexer:
         while self.source[self.candidate_start] in ' \n\t':
             self.candidate_start += 1  # skip whitespace
 
+    def undelimited(self):
+        return not self.delimiter_stack
+
     def chomp_and_resynchronize(self):
         matched = self.sight[0]
         # contemptibly, '$' can also match "just before the newline at
         # the end of the string"
         matched.representation = matched.representation.rstrip('\n')
         self.tokens.append(matched)
+        # We do this very limited amount of parsing here in the lexer module so
+        # that we can know what indent and dedent tokens to emit.
+        if isinstance(matched, Delimiter):
+            self.delimiter_stack.append(matched)
+            if len(self.delimiter_stack) >= 2:
+                penultimate, last = self.delimiter_stack[-2:]
+                if isinstance(last, penultimate.opposite):
+                    for _ in range(2):
+                        self.delimiter_stack.pop()
         self.sight = []
         self.candidate_start = self.candidate_end - 1
         self.skip_whitespace()
@@ -218,6 +269,7 @@ class BaseLexer:
         self.candidate_start = 0
         self.candidate_end = 1
         self.skip_whitespace()
+        self.delimiter_stack = []
         self.sight = []
         while self.candidate_end <= len(self.source):
             candidate = self.source[self.candidate_start:self.candidate_end]
@@ -258,7 +310,8 @@ TYPE_SPECIFIERS = [
     IntegerListSpecifier, StringListSpecifier,
     Arrow
 ]
-TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + [
+OTHER_RESERVED = [Dash]
+TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + OTHER_RESERVED + [
     Identifier,
     OpenParenthesis, CloseParenthesis,
     OpenBracket, CloseBracket,
