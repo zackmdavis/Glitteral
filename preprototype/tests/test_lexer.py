@@ -6,7 +6,7 @@ import unittest
 from lexer import *  # I know
 
 
-class TokenClassMatchingTest(unittest.TestCase):
+class TokenClassMatchingTestCase(unittest.TestCase):
 
     def test_token_matching(self):
         legitimates = {
@@ -24,7 +24,7 @@ class TokenClassMatchingTest(unittest.TestCase):
                         set(legitimates.values()) - {tokenclass}):
                     self.assertIsNone(mismatching_tokenclass.match(token))
 
-class LexerTest(unittest.TestCase):
+class LexerTestCase(unittest.TestCase):
 
     def test_tokenize_codeform(self):
         self.assertEqual(
@@ -107,6 +107,67 @@ class LexerTest(unittest.TestCase):
              Identifier("print"), Identifier("i"), CloseParenthesis(")"),
              CloseParenthesis(")")]
         )
+
+class PreparsingTestCase(unittest.TestCase):
+
+    @unittest.skip("not quite ready yet")
+    def test_undelimitedness(self):
+        our_lexer = Lexer()
+        our_lexer.tokenize("(for |i (range")
+        self.assertFalse(our_lexer.undelimited())
+        our_lexer.tokenize("10)| i)")
+        self.assertTrue(our_lexer.undelimited())
+
+    @unittest.skip("soon")
+    def test_emit_indent_tokens(self):
+        source = """
+(:= a 1)
+   (:= b 2)
+"""
+        our_lexer = Lexer()
+        tokens = our_lexer.tokenize(source)
+        self.assertEqual(1, our_lexer.indentation_level)
+        self.assertEqual(
+            [
+                OpenParenthesis("("),
+                Def(":="), Identifier("a"), IntegerLiteral("1"),
+                CloseParenthesis(")"), Indent(), OpenParenthesis("("),
+                Def(":="), Identifier("b"), IntegerLiteral("2"),
+                CloseParenthesis(")")
+            ],
+            tokens
+        )
+        further_source = "      (:= c 3)"
+        subsequent_tokens = our_lexer.tokenize(further_source)
+        self.assertEqual(2, our_lexer.indentation_level)
+        self.assertEqual(
+            [
+                Indent(), OpenParenthesis("("),
+                Def(":="), Identifier("b"), IntegerLiteral("2"),
+                CloseParenthesis(")")
+            ],
+            subsequent_tokens
+        )
+
+    @unittest.skip("patience")
+    def test_emit_dedent_tokens(self):
+        source = "(:= d 4)"
+        our_lexer = Lexer()
+        our_lexer.indentation_level = 1
+        tokens = our_lexer.tokenize(source)
+        self.assertEqual(0, our_lexer.indentation_level)
+        self.assertEqual(
+            [
+                Dedent(), OpenParenthesis("("),
+                Def(":="), Identifier("d"), IntegerLiteral("4"),
+                CloseParenthesis(")")
+            ],
+            tokens
+        )
+
+    @unittest.skip("TODO")
+    def test_only_emit_indentation_tokens_while_undelimited(self):
+        return "test code should go here"
 
 
 if __name__ == "__main__":

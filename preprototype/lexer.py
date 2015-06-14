@@ -16,7 +16,7 @@ class Token:
         self.representation = representation
 
     @classmethod
-    def match(cls, source_fragment):
+    def match(cls, source_fragment, **kwargs):
         if cls.recognizer.match(source_fragment):
             return cls(source_fragment)
         elif getattr(cls, 'prefix_recognizer',
@@ -198,6 +198,43 @@ class VoidLiteral(Reserved):
     recognizer = re.compile(r"Void$")
 
 
+class AbstractDentBase(Token):
+    prefix_recognizer = re.compile(r"\n *", re.MULTILINE)
+
+    @classmethod
+    def match(cls, source_fragment, *, lexer_context):
+        # CAUTION: monkey-patching a class variable (trust me on this one)
+        cls.recognizer = cls.recognizer_from_lexer_context(lexer_context)
+        super().match(source_fragment)
+
+class Indent(AbstractDentBase):
+
+    @classmethod
+    def recognizer_from_lexer_context(self, lexer_context):
+        if lexer_context.undelimited():
+            return re.compile(r"\n(?:   ){%d}(?=\S)" %
+                               (lexer_context.indentation_level + 1),
+                               re.MULTILINE)
+        else:
+            # we don't care about indentation between delimiters
+            return re.compile(r"$^")
+
+class Dedent(AbstractDentBase):
+
+    @classmethod
+    def recognizer_from_lexer_context(self, lexer_context):
+        if lexer_context.undelimited():
+            if lexer_context.indentation_level:
+                return re.compile(r"\n(?:   ){%d}(?=\S)" %
+                                  (lexer_context.indentation_level - 1),
+                                  re.MULTILINE)
+            else:
+                # we cannot dedent past the left margin
+                return re.compile(r"$^")
+        else:
+            # we don't care
+            return re.compile(r"$^")
+
 class Commentary(Token):
     def __init__(self, *_):
         # it's not meant for us; don't even bother reading it
@@ -224,7 +261,11 @@ class BaseLexer:
         self.tokenclasses = tokenclasses
         self.tokens = []
 
-    def skip_whitespace(self):
+        self.delimiter_stack = []
+        self.sight = []
+        self.indentation_level = 0
+
+    def skip_insignificant_whitespace(self):
         while self.source[self.candidate_start] in ' \n\t':
             self.candidate_start += 1  # skip whitespace
 
@@ -248,7 +289,7 @@ class BaseLexer:
                         self.delimiter_stack.pop()
         self.sight = []
         self.candidate_start = self.candidate_end - 1
-        self.skip_whitespace()
+        self.skip_insignificant_whitespace()
         self.candidate_end = self.candidate_start + 1
 
     @staticmethod
@@ -268,9 +309,7 @@ class BaseLexer:
         self.source = source + '█'  # end-of-file sentinel
         self.candidate_start = 0
         self.candidate_end = 1
-        self.skip_whitespace()
-        self.delimiter_stack = []
-        self.sight = []
+        self.skip_insignificant_whitespace()
         while self.candidate_end <= len(self.source):
             candidate = self.source[self.candidate_start:self.candidate_end]
             logger.debug("Entering tokenization loop for '%s' "
@@ -278,7 +317,7 @@ class BaseLexer:
                          candidate, self.candidate_start, self.candidate_end)
             premonition = list(filter(
                 lambda x: x,
-                [tokenclass.match(candidate)
+                [tokenclass.match(candidate, lexer_context=self)
                  for tokenclass in self.tokenclasses]
             ))
             logger.debug("Premonition: %s", premonition)
@@ -311,7 +350,8 @@ TYPE_SPECIFIERS = [
     Arrow
 ]
 OTHER_RESERVED = [Dash]
-TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + OTHER_RESERVED + [
+INDENTATION = [Indent, Dedent]
+TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + OTHER_RESERVED + INDENTATION + [
     Identifier,
     OpenParenthesis, CloseParenthesis,
     OpenBracket, CloseBracket,
