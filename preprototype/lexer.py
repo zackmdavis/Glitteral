@@ -292,6 +292,9 @@ class EndOfFile(Token):
 class TokenizingException(ValueError):
     ...
 
+class IndentationException(TokenizingException):
+    ...
+
 class PreparsingException(Exception):
     # TODO? raise this if we can detect an error during the preparsing of
     # delimiters that we do for significant whitespace purposes
@@ -319,36 +322,7 @@ class BaseLexer:
     def undelimited(self):
         return not self.delimiter_stack
 
-    def chomp_and_resynchronize(self):
-        matched = self.sight[0]
-
-        if isinstance(matched, AbstractDent):
-            new_offset = int(len(matched.representation.strip('\n')) /
-                             INDENTATION_WIDTH)
-            if new_offset > self.indentation_level:
-                dent_class = Indent
-            elif new_offset < self.indentation_level:
-                dent_class = Dedent
-            else:
-                dent_class = ConstantIndentation
-            for _ in range(abs(new_offset - self.indentation_level)):
-                self.tokens.append(dent_class())
-                self.indentation_level += matched.delta_indentation
-        else:
-            self.tokens.append(matched)
-
-        # We do this very limited amount of parsing here in the lexer module so
-        # that we can know what indent and dedent tokens to emit.
-        if isinstance(matched, Delimiter):
-            self.delimiter_stack.append(matched)
-            if len(self.delimiter_stack) >= 2:
-                penultimate, last = self.delimiter_stack[-2:]
-                if isinstance(last, penultimate.opposite):
-                    for _ in range(2):
-                        self.delimiter_stack.pop()
-
-        self.sight = []
-        self.candidate_start = self.candidate_end - 1
+    def skip_insignificant_whitespace(self):
         if self.undelimited():
             # If we're not being delimited, skip spaces (so we can try
             # to match the newline-and-leading-spaces-of-next-line)
@@ -357,30 +331,67 @@ class BaseLexer:
             # If we are being delimited, we don't care about
             # whitespace in any form
             self.skip_whitespace()
+
+    def indentation_match_special_handling(self, matched):
+        new_offset = int(len(matched.representation.strip('\n')) /
+                         INDENTATION_WIDTH)
+        if new_offset > self.indentation_level:
+            dent_class = Indent
+        elif new_offset < self.indentation_level:
+            dent_class = Dedent
+        else:
+            dent_class = ConstantIndentation
+        for _ in range(abs(new_offset - self.indentation_level)):
+            self.tokens.append(dent_class())
+            self.indentation_level += matched.delta_indentation
+
+    def delimiter_match_special_handling(self, matched):
+        # We do this very limited amount of parsing here in the lexer module so
+        # that we can know what indent and dedent tokens to emit.
+        self.delimiter_stack.append(matched)
+        if len(self.delimiter_stack) >= 2:
+            penultimate, last = self.delimiter_stack[-2:]
+            if isinstance(last, penultimate.opposite):
+                for _ in range(2):
+                    self.delimiter_stack.pop()
+
+    def chomp_and_resynchronize(self):
+        matched = self.sight[0]
+
+        if isinstance(matched, AbstractDent):
+            self.indentation_match_special_handling(matched)
+        else:
+            self.tokens.append(matched)
+
+        if isinstance(matched, Delimiter):
+            self.delimiter_match_special_handling(matched)
+
+        self.sight = []
+        self.candidate_start = self.candidate_end - 1
+        self.skip_insignificant_whitespace()
         self.candidate_end = self.candidate_start + 1
 
     @staticmethod
     def _handle_tokenizing_error(sight, candidate):
         if len(sight) == 0:
+            if candidate.startswith("\n "):
+                raise IndentationException(
+                    "Indentation levels must be exactly {} spaces.".format(
+                        INDENTATION_WIDTH))
             raise TokenizingException(
-                "Couldn't tokenize {}".format(candidate)
-            )
+                "Couldn't tokenize {}".format(candidate))
         else:
             raise TokenizingException(
                 "Ambiguous input: {} are tied as the longest "
                 "tokenizations of {}".format(
-                    ', '.join(map(str, sight)), candidate)
-            )
+                    ', '.join(map(str, sight)), candidate))
 
     def tokenize(self, source):
         self.source = source + '█'  # end-of-file sentinel
         self.candidate_start = 0
         self.candidate_end = 1
         self.tokens = []
-        if self.undelimited():
-            self.skip_spaces()
-        else:
-            self.skip_whitespace()
+        self.skip_insignificant_whitespace()
         while self.candidate_end <= len(self.source):
             candidate = self.source[self.candidate_start:self.candidate_end]
             logger.debug("Entering tokenization loop for %r "

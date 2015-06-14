@@ -173,10 +173,38 @@ if (= a 1)—
         self.assertEqual(Dedent(), first_dedent)
         self.assertEqual(Dedent(), second_dedent)
 
-    @unittest.skip("TODO")
     def test_only_emit_indentation_tokens_while_undelimited(self):
-        return "test code should go here"
+        source = """(function_whose
+   arguments_are
+      spread
+   over_other
+lines)"""
+        self.assertEqual(
+            [OpenParenthesis("("), Identifier("function_whose"),
+             Identifier("arguments_are"), Identifier("spread"),
+             Identifier("over_other"), Identifier("lines"),
+             CloseParenthesis(")")],
+            list(lex(source))
+        )
+        source_sans_parens = source.strip("()")
+        self.assertEqual(
+            [Identifier("function_whose"), Indent(),
+             Identifier("arguments_are"), Indent(),
+             Identifier("spread"), Dedent(),
+             Identifier("over_other"), Dedent(),
+             Identifier("lines")],
+            list(lex(source_sans_parens))
+        )
 
+    def test_nonstandard_indent_width(self):
+        for i in (1, 2, 4):
+            source = """
+if (= indent "{} spaces")—
+{}Truth
+""".format(i, ' '*i)
+            with self.subTest(indent_width=i):
+                with self.assertRaises(IndentationException):
+                    list(lex(source))
 
 if __name__ == "__main__":
     unittest.main()
