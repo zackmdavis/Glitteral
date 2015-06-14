@@ -93,10 +93,11 @@ class LexerTestCase(unittest.TestCase):
         )
 
     def test_trailing_newline(self):
+
         self.assertEqual(
             Lexer().tokenize("2 bar\nquux"),
             [IntegerLiteral("2"), Identifier("bar"),
-             ConstantIndentation('\n'), Identifier("quux")]
+             Identifier("quux")]
         )
 
     def test_tokenize_determinate_iteration(self):
@@ -119,47 +120,58 @@ class PreparsingTestCase(unittest.TestCase):
         self.assertTrue(our_lexer.undelimited())
 
     def test_emit_indent_tokens(self):
-        source = """(:= a 1)
-   (:= b 2)"""
+        source = """:= a 1
+   := b 2"""
         our_lexer = Lexer()
         tokens = our_lexer.tokenize(source)
         self.assertEqual(1, our_lexer.indentation_level)
         self.assertEqual(
             [
-                OpenParenthesis("("),
                 Def(":="), Identifier("a"), IntegerLiteral("1"),
-                CloseParenthesis(")"), Indent("\n   "), OpenParenthesis("("),
+                Indent(),
                 Def(":="), Identifier("b"), IntegerLiteral("2"),
-                CloseParenthesis(")")
             ],
             tokens
         )
-        further_source = "\n      (:= c 3)"
+        further_source = "\n      := c 3"
         subsequent_tokens = our_lexer.tokenize(further_source)
         self.assertEqual(2, our_lexer.indentation_level)
         self.assertEqual(
             [
-                Indent("\n      "), OpenParenthesis("("),
+                Indent(),
                 Def(":="), Identifier("c"), IntegerLiteral("3"),
-                CloseParenthesis(")")
             ],
             subsequent_tokens
         )
 
     def test_emit_dedent_tokens(self):
-        source = "\n(:= d 4)"
+        source = "\n:= d 4"
         our_lexer = Lexer()
         our_lexer.indentation_level = 1
         tokens = our_lexer.tokenize(source)
         self.assertEqual(0, our_lexer.indentation_level)
         self.assertEqual(
             [
-                Dedent("\n"), OpenParenthesis("("),
-                Def(":="), Identifier("d"), IntegerLiteral("4"),
-                CloseParenthesis(")")
+                Dedent(), Def(":="), Identifier("d"), IntegerLiteral("4"),
             ],
             tokens
         )
+
+    def test_consecutive_dedents(self):
+        source = """
+if (= a 1)—
+   if (foo b)—
+      (attack! c)"""
+        our_lexer = Lexer()
+        tokens = our_lexer.tokenize(source)
+        self.assertEqual(2, our_lexer.indentation_level)
+        further_source = """
+(mine "minerals")
+"""
+        first_dedent, second_dedent, *_rest = our_lexer.tokenize(further_source)
+        self.assertEqual(0, our_lexer.indentation_level)
+        self.assertEqual(Dedent(), first_dedent)
+        self.assertEqual(Dedent(), second_dedent)
 
     @unittest.skip("TODO")
     def test_only_emit_indentation_tokens_while_undelimited(self):

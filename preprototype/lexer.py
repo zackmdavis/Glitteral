@@ -6,7 +6,10 @@ from collections import namedtuple
 
 from utils import LookaheadStream, get_logger
 
+
 logger = get_logger(__name__)
+
+INDENTATION_WIDTH = 3
 
 PartiallyMatchedSubtoken = namedtuple('PartiallyMatchedSubtoken',
                                       ('tokenclass', 'representation'))
@@ -200,8 +203,24 @@ class VoidLiteral(Reserved):
     recognizer = re.compile(r"Void$(?!\n)")
 
 
+# Some might argue that our current handling of indentation tokens is
+# slightly recondite (we _hope_ they would not say _sloppy_!): token
+# recognition mostly happens as usual with our `prefix_recognizer` and
+# `recognizer` regexes, with the detail that the recognizer is
+# determined dynamically from the current indentation level. But the
+# token that gets recognized isn't the same as the token or tokens
+# that ultimately get emitted; we analyze the representation of the
+# recognized token and decide how many tokens to actually emit during
+# the chomp-and-resynchronization phase.
+
 class AbstractDent(Token):
     prefix_recognizer = re.compile(r"\n *$(?!\n)", re.MULTILINE)
+
+    def __init__(self, *args):
+        if not args:
+            self.representation = None
+        else:
+            super().__init__(*args)
 
     @classmethod
     def match(cls, source_fragment, *, lexer_context):
@@ -215,7 +234,7 @@ class Indent(AbstractDent):
     @classmethod
     def recognizer_from_lexer_context(self, lexer_context):
         if lexer_context.undelimited():
-            return re.compile(r"\n(?:   ){%d}$(?!\n)" %
+            return re.compile(r"\n(   ){%d,}$(?!\n)" %
                                (lexer_context.indentation_level + 1),
                                re.MULTILINE)
         else:
@@ -229,7 +248,7 @@ class Dedent(AbstractDent):
     def recognizer_from_lexer_context(self, lexer_context):
         if lexer_context.undelimited():
             if lexer_context.indentation_level:
-                return re.compile(r"\n(?:   ){%d}$(?!\n)" %
+                return re.compile(r"\n(   ){,%d}$(?!\n)" %
                                   (lexer_context.indentation_level - 1),
                                   re.MULTILINE)
             else:
@@ -240,6 +259,10 @@ class Dedent(AbstractDent):
             return re.compile(r"(?!)")
 
 class ConstantIndentation(AbstractDent):
+    # N.b., ConstantIndentation tokens will never actually get
+    # emitted, but are a useful placeholder during token recognition
+    # probably.
+
     delta_indentation = 0
 
     @classmethod
@@ -298,10 +321,21 @@ class BaseLexer:
 
     def chomp_and_resynchronize(self):
         matched = self.sight[0]
-        self.tokens.append(matched)
 
         if isinstance(matched, AbstractDent):
-            self.indentation_level += matched.delta_indentation
+            new_offset = int(len(matched.representation.strip('\n')) /
+                             INDENTATION_WIDTH)
+            if new_offset > self.indentation_level:
+                dent_class = Indent
+            elif new_offset < self.indentation_level:
+                dent_class = Dedent
+            else:
+                dent_class = ConstantIndentation
+            for _ in range(abs(new_offset - self.indentation_level)):
+                self.tokens.append(dent_class())
+                self.indentation_level += matched.delta_indentation
+        else:
+            self.tokens.append(matched)
 
         # We do this very limited amount of parsing here in the lexer module so
         # that we can know what indent and dedent tokens to emit.
