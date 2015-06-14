@@ -95,7 +95,8 @@ class LexerTestCase(unittest.TestCase):
     def test_trailing_newline(self):
         self.assertEqual(
             Lexer().tokenize("2 bar\nquux"),
-            [IntegerLiteral("2"), Identifier("bar"), Identifier("quux")]
+            [IntegerLiteral("2"), Identifier("bar"),
+             ConstantIndentation('\n'), Identifier("quux")]
         )
 
     def test_tokenize_determinate_iteration(self):
@@ -110,7 +111,6 @@ class LexerTestCase(unittest.TestCase):
 
 class PreparsingTestCase(unittest.TestCase):
 
-    @unittest.skip("not quite ready yet")
     def test_undelimitedness(self):
         our_lexer = Lexer()
         our_lexer.tokenize("(for |i (range")
@@ -118,12 +118,9 @@ class PreparsingTestCase(unittest.TestCase):
         our_lexer.tokenize("10)| i)")
         self.assertTrue(our_lexer.undelimited())
 
-    @unittest.skip("soon")
     def test_emit_indent_tokens(self):
-        source = """
-(:= a 1)
-   (:= b 2)
-"""
+        source = """(:= a 1)
+   (:= b 2)"""
         our_lexer = Lexer()
         tokens = our_lexer.tokenize(source)
         self.assertEqual(1, our_lexer.indentation_level)
@@ -131,34 +128,33 @@ class PreparsingTestCase(unittest.TestCase):
             [
                 OpenParenthesis("("),
                 Def(":="), Identifier("a"), IntegerLiteral("1"),
-                CloseParenthesis(")"), Indent(), OpenParenthesis("("),
+                CloseParenthesis(")"), Indent("\n   "), OpenParenthesis("("),
                 Def(":="), Identifier("b"), IntegerLiteral("2"),
                 CloseParenthesis(")")
             ],
             tokens
         )
-        further_source = "      (:= c 3)"
+        further_source = "\n      (:= c 3)"
         subsequent_tokens = our_lexer.tokenize(further_source)
         self.assertEqual(2, our_lexer.indentation_level)
         self.assertEqual(
             [
-                Indent(), OpenParenthesis("("),
-                Def(":="), Identifier("b"), IntegerLiteral("2"),
+                Indent("\n      "), OpenParenthesis("("),
+                Def(":="), Identifier("c"), IntegerLiteral("3"),
                 CloseParenthesis(")")
             ],
             subsequent_tokens
         )
 
-    @unittest.skip("patience")
     def test_emit_dedent_tokens(self):
-        source = "(:= d 4)"
+        source = "\n(:= d 4)"
         our_lexer = Lexer()
         our_lexer.indentation_level = 1
         tokens = our_lexer.tokenize(source)
         self.assertEqual(0, our_lexer.indentation_level)
         self.assertEqual(
             [
-                Dedent(), OpenParenthesis("("),
+                Dedent("\n"), OpenParenthesis("("),
                 Def(":="), Identifier("d"), IntegerLiteral("4"),
                 CloseParenthesis(")")
             ],

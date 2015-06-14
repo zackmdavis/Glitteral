@@ -20,7 +20,8 @@ class Token:
         if cls.recognizer.match(source_fragment):
             return cls(source_fragment)
         elif getattr(cls, 'prefix_recognizer',
-                     re.compile('$^')).match(source_fragment):
+                     # the empty string is a prefix of anything
+                     re.compile('^(?![\s\S])')).match(source_fragment):
             return PartiallyMatchedSubtoken(
                 cls.__name__, source_fragment)
         else:
@@ -32,7 +33,7 @@ class Token:
 
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__,
-                                 self.representation)
+                                 repr(self.representation))
 
 
 # word characters, plus hyphen, plus ?! for predicates and living
@@ -47,53 +48,54 @@ class Keyword(Reserved):
     ...
 
 class If(Keyword):
-    recognizer = re.compile(r"if$")
+    recognizer = re.compile(r"if$(?!\n)")
 
 class When(Keyword):
-    recognizer = re.compile(r"when$")
+    recognizer = re.compile(r"when$(?!\n)")
 
 class For(Keyword):
-    recognizer = re.compile(r"for$")
+    recognizer = re.compile(r"for$(?!\n)")
 
 class While(Keyword):
-    recognizer = re.compile(r"while$")
+    recognizer = re.compile(r"while$(?!\n)")
 
 class Do(Keyword):
-    recognizer = re.compile(r"do$")
+    recognizer = re.compile(r"do$(?!\n)")
 
 class Lambda(Keyword):
-    recognizer = re.compile(r"λ$")
+    recognizer = re.compile(r"λ$(?!\n)")
 
 class Def(Keyword):
-    recognizer = re.compile(r":=$")
+    recognizer = re.compile(r":=$(?!\n)")
 
 class Deflambda(Keyword):
-    recognizer = re.compile(r":=λ$")
+    recognizer = re.compile(r":=λ$(?!\n)")
 
 class SubscriptDef(Keyword):
-    recognizer = re.compile(r"_:=$")
+    recognizer = re.compile(r"_:=$(?!\n)")
 
 
 class Dash(Reserved):
-    recognizer = re.compile(r"—$")
+    recognizer = re.compile(r"—$(?!\n)")
 
 class Arrow(Keyword):
-    recognizer = re.compile(r"→$")
+    recognizer = re.compile(r"→$(?!\n)")
 
 class Identifier(Token):
     # simplify regex-based distinguishing of numeric literals from
     # identifiers by preventing the latter from starting with a digit,
     # as simulated by a negative lookahead assertion
-    recognizer = re.compile("(?![0-9])[{0}][{0}]*$".format(IDENTIFIER_CHARS))
+    recognizer = re.compile("(?![0-9])[{0}][{0}]*$(?!\n)".format(
+        IDENTIFIER_CHARS))
 
 class TypeSpecifier(Reserved):
-    prefix_recognizer = re.compile(r"\^\w*$")
+    prefix_recognizer = re.compile(r"\^\w*$(?!\n)")
 
 def type_specifier_class(type_name, type_specifier):
     return type(
         "{}Specifier".format(type_name),
         (TypeSpecifier,),
-        {'recognizer': re.compile(r"\^{}$".format(type_specifier))}
+        {'recognizer': re.compile(r"\^{}$(?!\n)".format(type_specifier))}
     )
 
 IntegerSpecifer = type_specifier_class("Integer", "int")
@@ -106,11 +108,11 @@ BooleanSpecifier = type_specifier_class("Boolean", "bool")
 # advance the project along other fronts
 class IntegerListSpecifier(TypeSpecifier):
     prefix_recognizer = re.compile(r"(\^\[$)|(\^\[i$)|(\^\[in$)|(\^\[int$)")
-    recognizer = re.compile(r"\^\[int]$")
+    recognizer = re.compile(r"\^\[int]$(?!\n)")
 
 class StringListSpecifier(TypeSpecifier):
     prefix_recognizer = re.compile(r"(\^\[$)|(\^\[s$)|(\^\[st$)|(\^\[str$)")
-    recognizer = re.compile(r"\^\[str]$")
+    recognizer = re.compile(r"\^\[str]$(?!\n)")
 
 
 class Delimiter(Token):
@@ -129,52 +131,52 @@ class AssociativeDelimiter(Token):
     ...
 
 class OpenParenthesis(OpenDelimiter):
-    recognizer = re.compile(r"\($")
+    recognizer = re.compile(r"\($(?!\n)")
 
     @property
     def opposite(self):
         return CloseParenthesis
 
 class CloseParenthesis(CloseDelimiter):
-    recognizer = re.compile(r"\)$")
+    recognizer = re.compile(r"\)$(?!\n)")
 
     @property
     def opposite(self):
         return OpenParenthesis
 
 class OpenBracket(SequentialDelimiter, OpenDelimiter):
-    recognizer = re.compile(r"\[$")
+    recognizer = re.compile(r"\[$(?!\n)")
 
     @property
     def opposite(self):
         return CloseBracket
 
 class CloseBracket(SequentialDelimiter, CloseDelimiter):
-    recognizer = re.compile(r"\]$")
+    recognizer = re.compile(r"\]$(?!\n)")
 
     @property
     def opposite(self):
         return OpenBracket
 
 class OpenBrace(AssociativeDelimiter, OpenDelimiter):
-    recognizer = re.compile(r"\{$")
+    recognizer = re.compile(r"\{$(?!\n)")
 
     @property
     def opposite(self):
         return CloseBrace
 
 class CloseBrace(AssociativeDelimiter, CloseDelimiter):
-    recognizer = re.compile(r"\}$")
+    recognizer = re.compile(r"\}$(?!\n)")
 
     @property
     def opposite(self):
         return OpenBrace
 
 class Semicolon(Token):
-    recognizer = re.compile(";$")
+    recognizer = re.compile(";$(?!\n)")
 
 class Pipe(SequentialDelimiter, OpenDelimiter, CloseDelimiter):
-    recognizer = re.compile(r"\|$")
+    recognizer = re.compile(r"\|$(?!\n)")
 
     @property
     def opposite(self):
@@ -185,67 +187,83 @@ class StringLiteral(Token):
     recognizer = re.compile(r'".*"$')
 
 class InternLiteral(Token):
-    prefix_recognizer = re.compile(r"'[^']*$")
-    recognizer = re.compile(r"'.*'$")
+    prefix_recognizer = re.compile(r"'[^']*$(?!\n)")
+    recognizer = re.compile(r"'.*'$(?!\n)")
 
 class IntegerLiteral(Token):
-    recognizer = re.compile(r"\d+$")
+    recognizer = re.compile(r"\d+$(?!\n)")
 
 class BooleanLiteral(Reserved):
-    recognizer = re.compile(r"(?:Truth)$|(?:Falsity)$")
+    recognizer = re.compile(r"(?:Truth)$|(?:Falsity)$(?!\n)")
 
 class VoidLiteral(Reserved):
-    recognizer = re.compile(r"Void$")
+    recognizer = re.compile(r"Void$(?!\n)")
 
 
-class AbstractDentBase(Token):
-    prefix_recognizer = re.compile(r"\n *", re.MULTILINE)
+class AbstractDent(Token):
+    prefix_recognizer = re.compile(r"\n *$(?!\n)", re.MULTILINE)
 
     @classmethod
     def match(cls, source_fragment, *, lexer_context):
         # CAUTION: monkey-patching a class variable (trust me on this one)
         cls.recognizer = cls.recognizer_from_lexer_context(lexer_context)
-        super().match(source_fragment)
+        return super().match(source_fragment)
 
-class Indent(AbstractDentBase):
+class Indent(AbstractDent):
+    delta_indentation = 1
 
     @classmethod
     def recognizer_from_lexer_context(self, lexer_context):
         if lexer_context.undelimited():
-            return re.compile(r"\n(?:   ){%d}(?=\S)" %
+            return re.compile(r"\n(?:   ){%d}$(?!\n)" %
                                (lexer_context.indentation_level + 1),
                                re.MULTILINE)
         else:
             # we don't care about indentation between delimiters
-            return re.compile(r"$^")
+            return re.compile(r"(?!)")
 
-class Dedent(AbstractDentBase):
+class Dedent(AbstractDent):
+    delta_indentation = -1
 
     @classmethod
     def recognizer_from_lexer_context(self, lexer_context):
         if lexer_context.undelimited():
             if lexer_context.indentation_level:
-                return re.compile(r"\n(?:   ){%d}(?=\S)" %
+                return re.compile(r"\n(?:   ){%d}$(?!\n)" %
                                   (lexer_context.indentation_level - 1),
                                   re.MULTILINE)
             else:
                 # we cannot dedent past the left margin
-                return re.compile(r"$^")
+                return re.compile(r"(?!)")
         else:
             # we don't care
-            return re.compile(r"$^")
+            return re.compile(r"(?!)")
+
+class ConstantIndentation(AbstractDent):
+    delta_indentation = 0
+
+    @classmethod
+    def recognizer_from_lexer_context(self, lexer_context):
+        if lexer_context.undelimited():
+            return re.compile(r"\n(?:   ){%d}(?!\n)$" %
+                              lexer_context.indentation_level,
+                              re.MULTILINE)
+        else:
+            # we don't care about indentation between delimiters
+            return re.compile(r"(?!)")
+
 
 class Commentary(Token):
     def __init__(self, *_):
         # it's not meant for us; don't even bother reading it
         self.representation = ''
 
-    prefix_recognizer = re.compile(r"#.*$")
-    recognizer = re.compile(r"#.*\n$")
+    prefix_recognizer = re.compile(r"#.*$(?!\n)")
+    recognizer = re.compile(r"#.*\n$(?!\n)")
 
 
 class EndOfFile(Token):
-    recognizer = re.compile(r"█$")
+    recognizer = re.compile(r"█$(?!\n)")
 
 
 class TokenizingException(ValueError):
@@ -265,19 +283,26 @@ class BaseLexer:
         self.sight = []
         self.indentation_level = 0
 
-    def skip_insignificant_whitespace(self):
-        while self.source[self.candidate_start] in ' \n\t':
-            self.candidate_start += 1  # skip whitespace
+    def skip_character_class(self, character_class):
+        while self.source[self.candidate_start] in character_class:
+            self.candidate_start += 1
+
+    def skip_spaces(self):
+        self.skip_character_class(' ')
+
+    def skip_whitespace(self):
+        self.skip_character_class(' \n\t')
 
     def undelimited(self):
         return not self.delimiter_stack
 
     def chomp_and_resynchronize(self):
         matched = self.sight[0]
-        # contemptibly, '$' can also match "just before the newline at
-        # the end of the string"
-        matched.representation = matched.representation.rstrip('\n')
         self.tokens.append(matched)
+
+        if isinstance(matched, AbstractDent):
+            self.indentation_level += matched.delta_indentation
+
         # We do this very limited amount of parsing here in the lexer module so
         # that we can know what indent and dedent tokens to emit.
         if isinstance(matched, Delimiter):
@@ -287,9 +312,17 @@ class BaseLexer:
                 if isinstance(last, penultimate.opposite):
                     for _ in range(2):
                         self.delimiter_stack.pop()
+
         self.sight = []
         self.candidate_start = self.candidate_end - 1
-        self.skip_insignificant_whitespace()
+        if self.undelimited():
+            # If we're not being delimited, skip spaces (so we can try
+            # to match the newline-and-leading-spaces-of-next-line)
+            self.skip_spaces()
+        else:
+            # If we are being delimited, we don't care about
+            # whitespace in any form
+            self.skip_whitespace()
         self.candidate_end = self.candidate_start + 1
 
     @staticmethod
@@ -309,10 +342,14 @@ class BaseLexer:
         self.source = source + '█'  # end-of-file sentinel
         self.candidate_start = 0
         self.candidate_end = 1
-        self.skip_insignificant_whitespace()
+        self.tokens = []
+        if self.undelimited():
+            self.skip_spaces()
+        else:
+            self.skip_whitespace()
         while self.candidate_end <= len(self.source):
             candidate = self.source[self.candidate_start:self.candidate_end]
-            logger.debug("Entering tokenization loop for '%s' "
+            logger.debug("Entering tokenization loop for %r "
                          "with candidate indices %s:%s",
                          candidate, self.candidate_start, self.candidate_end)
             premonition = list(filter(
@@ -320,6 +357,7 @@ class BaseLexer:
                 [tokenclass.match(candidate, lexer_context=self)
                  for tokenclass in self.tokenclasses]
             ))
+            logger.debug("Sight: %s", self.sight)
             logger.debug("Premonition: %s", premonition)
             if premonition:
                 self.sight = premonition
@@ -350,7 +388,7 @@ TYPE_SPECIFIERS = [
     Arrow
 ]
 OTHER_RESERVED = [Dash]
-INDENTATION = [Indent, Dedent]
+INDENTATION = [Indent, Dedent, ConstantIndentation]
 TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + OTHER_RESERVED + INDENTATION + [
     Identifier,
     OpenParenthesis, CloseParenthesis,

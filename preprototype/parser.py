@@ -443,7 +443,11 @@ def parse_associative(tokenstream):
 def parse_expression(tokenstream):
     leading_token = tokenstream.peek()
     logger.debug("leading_token in parse_expression is %s", leading_token)
-    while isinstance(leading_token, Commentary):
+    while (isinstance(leading_token, Commentary) or
+           # UNDER CONSTRUCTION: let's temporarily ignore indentation
+           # tokens to prevent breaking the world in the meantime
+           # before we can actually parse them
+           isinstance(leading_token, AbstractDent)):
         tokenstream.pop()
         leading_token = tokenstream.peek()
 
