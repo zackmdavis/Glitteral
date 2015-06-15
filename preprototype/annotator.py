@@ -57,6 +57,9 @@ def propogate_environments(expression, statementlike=True):
     if isinstance(expression, NamedFunctionDefinition):
         global_environment[expression.name.value] = expression
 
+    logger.debug("expression %s recieved global environment %s",
+                 expression, expression.global_environment)
+
     for i, child in enumerate(expression.children):
         # set locals for :=λ, let, for, &c.
         child.local_environment = expression.local_environment.copy()
@@ -80,6 +83,7 @@ def propogate_environments(expression, statementlike=True):
                   isinstance(expression, Application) or
                   isinstance(expression, Sequential) or
                   isinstance(expression, Associative))))
+
         propogate_environments(child, statementlike=child_is_statementlike)
 
 def annotate(expressionstream):

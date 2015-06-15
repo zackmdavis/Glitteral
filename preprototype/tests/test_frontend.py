@@ -13,9 +13,9 @@ class FrontendTestCase(unittest.TestCase):
 
     def test_named_function_definition(self):
         source = """
-(:=λ first_plus_square_of_second |a ^int b ^int| → ^int
-  (+ a (⋅ b b)))
-(:= we_assert "a and b were in the fn body's env., but not here")
+:=λ first_plus_square_of_second |a ^int b ^int| → ^int
+   (+ a (⋅ b b))
+:= we_assert "a and b were in the fn body's env., but not here"
 """
         defn_first_plus, def_we_assert = annotate(parse(lex(source)))
         # The local environment has our arguments,
@@ -35,10 +35,12 @@ class FrontendTestCase(unittest.TestCase):
 
     def test_definition_sets_subsequent_global_environment(self):
         source = """
-(:= a [1 2 3])
-(for |i a| (print_integer a))"""
+:= a [1 2 3]
+for |i a|—
+   (println a)
+2"""
         annotated = list(annotate(parse(lex(source))))
-        def_a, for_i_in_a = annotated
+        def_a, for_i_in_a, _XXX_FIXME_workaround_for_awful_bug = annotated
         self.assertIsNone(def_a.global_environment.get('a'))
         self.assertEqual(
             List([IntegerAtom(1), IntegerAtom(2), IntegerAtom(3)]),
@@ -47,7 +49,7 @@ class FrontendTestCase(unittest.TestCase):
 
     def test_dictionary_literal_annotated_with_definition(self):
         source = """
-(:= dee {"rah" 1; "hey" 2;})"""
+:= dee {"rah" 1; "hey" 2;}"""
         annotated = list(annotate(parse(lex(source))))
         def_dee, = annotated
         dictionary_literal_node = def_dee.identified

@@ -1,7 +1,7 @@
 # ASPIRATIONAL
 
 :=λ modulo |a ^int n ^int| → ^int
-   (:= quotient (÷ a n))
+   := quotient (÷ a n)
    (− a (⋅ quotient n))
 
 :=λ collatz_advance |n ^int| → ^int

@@ -35,8 +35,11 @@ class Token:
                 self.representation == other.representation)
 
     def __repr__(self):
-        return "<{}: {}>".format(self.__class__.__name__,
-                                 repr(self.representation))
+        return "<{}{}>".format(
+            self.__class__.__name__,
+            (": {}".format(repr(self.representation))
+             if self.representation is not None else '')
+        )
 
 
 # word characters, plus hyphen, plus ?! for predicates and living
@@ -81,7 +84,7 @@ class SubscriptDef(Keyword):
 class Dash(Reserved):
     recognizer = re.compile(r"—$(?!\n)")
 
-class Arrow(Keyword):
+class Arrow(Reserved):
     recognizer = re.compile(r"→$(?!\n)")
 
 class Identifier(Token):
@@ -258,11 +261,7 @@ class Dedent(AbstractDent):
             # we don't care
             return re.compile(r"(?!)")
 
-class ConstantIndentation(AbstractDent):
-    # N.b., ConstantIndentation tokens will never actually get
-    # emitted, but are a useful placeholder during token recognition
-    # probably.
-
+class AlignedNewline(AbstractDent):
     delta_indentation = 0
 
     @classmethod
@@ -335,15 +334,16 @@ class BaseLexer:
     def indentation_match_special_handling(self, matched):
         new_offset = int(len(matched.representation.strip('\n')) /
                          INDENTATION_WIDTH)
-        if new_offset > self.indentation_level:
-            dent_class = Indent
-        elif new_offset < self.indentation_level:
-            dent_class = Dedent
+        if new_offset == self.indentation_level:
+            ...
         else:
-            dent_class = ConstantIndentation
-        for _ in range(abs(new_offset - self.indentation_level)):
-            self.tokens.append(dent_class())
-            self.indentation_level += matched.delta_indentation
+            if new_offset > self.indentation_level:
+                dent_class = Indent
+            elif new_offset < self.indentation_level:
+                dent_class = Dedent
+            for _ in range(abs(new_offset - self.indentation_level)):
+                self.tokens.append(dent_class())
+                self.indentation_level += matched.delta_indentation
 
     def delimiter_match_special_handling(self, matched):
         # We do this very limited amount of parsing here in the lexer module so
@@ -433,7 +433,7 @@ TYPE_SPECIFIERS = [
     Arrow
 ]
 OTHER_RESERVED = [Dash]
-INDENTATION = [Indent, Dedent, ConstantIndentation]
+INDENTATION = [Indent, Dedent, AlignedNewline]
 TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + OTHER_RESERVED + INDENTATION + [
     Identifier,
     OpenParenthesis, CloseParenthesis,

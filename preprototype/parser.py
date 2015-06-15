@@ -183,7 +183,7 @@ class DeterminateIteration(Codeform):
             self.index_identifier, self.iterable
         )
 
-class Application(Codeform):
+class Application(Expression):
     def __init__(self, function, arguments):
         super().__init__()
         self.function = function
@@ -320,7 +320,14 @@ class VoidAtom(Atom):
 class PrimitiveAtom(Atom):
     ...
 
-class TypeSpecifierAtom(PrimitiveAtom):
+# Maybe??
+class DentAtom(Atom):
+    ...
+
+class ReservedAtom(Atom):
+    ...
+
+class TypeSpecifierAtom(Atom):
     ...
 
 class BuiltinAtom(Atom):
@@ -331,7 +338,120 @@ class BuiltinAtom(Atom):
 class ParsingException(Exception):
     ...
 
+
 def parse_codeform(tokenstream):
+    open_keyword = tokenstream.pop()
+    if not isinstance(open_keyword, Keyword):
+        raise ParsingException(
+            "Expected a keyword token, got {}.".format(open_keyword))
+
+    if open_keyword.representation == "if":
+        condition = parse_expression(tokenstream)
+        # TODO: write some helpers to clear up this contemptible boilerplate
+        dash = parse_expression(tokenstream)
+        if not isinstance(dash, ReservedAtom) and dash.value == "—":
+            raise ParsingException("Expected dash (—), got {}".format(dash))
+        indent = parse_expression(tokenstream)
+        if not isinstance(indent, AbstractDent):
+            raise ParsingException("Expected indent, got {}".format(indent))
+        consequent = parse_expression(tokenstream)
+        post_consequent = parse_expression(tokenstream)
+        if isinstance(post_consequent, Dedent):
+            return Conditional(condition, consequent)
+        else:
+            alternative = post_consequent
+            dedent = parse_expression(tokenstream)
+            if not isinstance(dedent, Dedent):
+                raise ParsingException("Expected dedent, got {}".format(dedent))
+            return Conditional(condition, consequent, alternative)
+    elif open_keyword.representation == "when":
+        condition = parse_expression(tokenstream)
+        dash = parse_expression(dash)
+        if not isinstance(dash, ReservedAtom) and dash.value == "—":
+            raise ParsingException("Expected dash (—), got {}".format(dash))
+        indent = parse_expression(tokenstream)
+        if not isinstance(indent, AbstractDent):
+            raise ParsingException("Expected indent, got {}".format(indent))
+        body = []
+        done_here = False
+        while not done_here:
+            next_token = tokenstream.peek()
+            if isinstance(next_token, Dedent):
+                tokenstream.pop()
+                done_here = True
+            else:
+                body.append(parse_expression(tokenstream))
+        return SingletrackedConditional(condition, body)
+    elif open_keyword.representation == ":=":
+        # TODO: same error-checking guarantees throughout this entire (long)
+        # `parse_codeform` function
+        identifier, identified = [parse_expression(tokenstream)
+                                  for _ in range(2)]
+        return Definition(identifier, identified)
+    elif open_keyword.representation == "_:=":
+        collection, subscript, identified = [parse_expression(tokenstream)
+                                             for _ in range(3)]
+        return SubscriptAssignment(collection, subscript, identified)
+    elif open_keyword.representation == ":=λ":
+        name = parse_expression(tokenstream)
+        argument_sequential = parse_expression(tokenstream)
+        _arrow = parse_expression(tokenstream)
+        return_type = parse_expression(tokenstream)
+        indent = parse_expression(tokenstream)
+        body = []
+        done_here = False
+        while not done_here:
+            next_token = tokenstream.peek()
+            if isinstance(next_token, Dedent):
+                tokenstream.pop()
+                done_here = True
+            else:
+                body.append(parse_expression(tokenstream))
+        return NamedFunctionDefinition(name, argument_sequential, return_type,
+                                       body)
+    elif open_keyword.representation == "do":
+        dash, indent = [parse_expression(tokenstream) for _ in range(2)]
+        body = []
+        done_here = False
+        while not done_here:
+            next_token = tokenstream.peek()
+            if isinstance(next_token, Dedent):
+                tokenstream.pop()
+                done_here = True
+            else:
+                body.append(parse_expression(tokenstream))
+        return DoBlock(body)
+    elif open_keyword.representation == "for":
+        bindings = parse_expression(tokenstream)
+        index_identifier, iterable = bindings.elements
+        dash, indent = [parse_expression(tokenstream) for _ in range(2)]
+        body = []
+        done_here = False
+        while not done_here:
+            next_token = tokenstream.peek()
+            if isinstance(next_token, Dedent):
+                tokenstream.pop()
+                done_here = True
+            else:
+                body.append(parse_expression(tokenstream))
+        return DeterminateIteration(index_identifier, iterable, body)
+    elif open_keyword.representation == "while":
+        condition = parse_expression(tokenstream)
+        dash, indent = [parse_expression(tokenstream) for _ in range(2)]
+        body = []
+        done_here = False
+        while not done_here:
+            next_token = tokenstream.peek()
+            if isinstance(next_token, Dedent):
+                tokenstream.pop()
+                done_here = True
+            else:
+                body.append(parse_expression(tokenstream))
+        return IndeterminateIteration(condition, body)
+    else:
+        raise ParsingException("Expected keyword, got {}".format(open_keyword))
+
+def parse_application(tokenstream):
     open_paren = tokenstream.pop()
     if not isinstance(open_paren, OpenParenthesis):
         raise ParsingException(
@@ -347,45 +467,10 @@ def parse_codeform(tokenstream):
         else:
             rest.append(parse_expression(tokenstream))
 
-    if isinstance(first, IdentifierAtom):
-        return Application(first, rest)
-    elif isinstance(first, PrimitiveAtom):
-        if first.value == "if":
-            if len(rest) not in (2, 3):
-                raise ParsingException("Conditional expression must have 2 or "
-                                       "3 arguments.")
-            return Conditional(*rest)
-        elif first.value == "when":
-            condition, *body = rest
-            return SingletrackedConditional(condition, body)
-        elif first.value == ":=":
-            if len(rest) != 2:
-                raise ParsingException("Definition must have 2 arguments, got "
-                                       "%s", rest)
-            if not isinstance(rest[0], IdentifierAtom):
-                raise ParsingException("First argument to definition must be "
-                                       "identifier.")
-            return Definition(*rest)
-        elif first.value == "_:=":
-            if len(rest) != 3:
-                raise ParsingException("Subscript assignment must have 3 "
-                                       "arguments, got {}".format(rest))
-            return SubscriptAssignment(*rest)
-        elif first.value == ":=λ":
-            # TODO: error checking
-            name, argument_sequential, _arrow, return_type, *expressions = rest
-            return NamedFunctionDefinition(
-                name, argument_sequential, return_type, expressions)
-        elif first.value == "do":
-            expressions = rest
-            return DoBlock(expressions)
-        elif first.value == "while":
-            condition, *body = rest
-            return IndeterminateIteration(condition, body)
-        elif first.value == "for":
-            bindings, *body = rest
-            index_identifier, iterable = bindings.elements
-            return DeterminateIteration(index_identifier, iterable, body)
+    if not isinstance(first, IdentifierAtom):
+        raise ParsingException("Expected first element of application to be "
+                               "an identifier, got {}".format(first))
+    return Application(first, rest)
 
 def parse_sequential(tokenstream):
     open_delimiter = tokenstream.pop()
@@ -443,17 +528,15 @@ def parse_associative(tokenstream):
 def parse_expression(tokenstream):
     leading_token = tokenstream.peek()
     logger.debug("leading_token in parse_expression is %s", leading_token)
-    while (isinstance(leading_token, Commentary) or
-           # UNDER CONSTRUCTION: let's temporarily ignore indentation
-           # tokens to prevent breaking the world in the meantime
-           # before we can actually parse them
-           isinstance(leading_token, AbstractDent)):
+    while isinstance(leading_token, Commentary):
         tokenstream.pop()
         leading_token = tokenstream.peek()
 
-    if isinstance(leading_token, OpenDelimiter):  # collections
+    if isinstance(leading_token, Keyword):  # indented codeforms
+        return parse_codeform(tokenstream)
+    elif isinstance(leading_token, OpenDelimiter):  # collections
         if isinstance(leading_token, OpenParenthesis):
-            return parse_codeform(tokenstream)
+            return parse_application(tokenstream)
         elif (isinstance(leading_token, OpenBracket) or
             isinstance(leading_token, Pipe)):
             return parse_sequential(tokenstream)
@@ -469,7 +552,17 @@ def parse_expression(tokenstream):
         expression_token = tokenstream.pop()
         if isinstance(expression_token, Keyword):
             return PrimitiveAtom(expression_token.representation)
-        if isinstance(expression_token, TypeSpecifier):
+        elif isinstance(expression_token, AbstractDent):
+            # XXX INCONSISTENCY TODO FIXME RESEARCH: the
+            # indent/dedent/aligned-newline tokens don't have representations;
+            # rather than recreate parallel boilerplate here, maybe try out
+            # letting the token stand for itself?? Distinguishing "atoms" in
+            # this module and "tokens" in the lexer seemed like a good idea on
+            # the grounds that lexing and parsing are different things, but
+            # maybe the token/atom distinction isn't actually buying us very
+            # much??
+            return expression_token
+        elif isinstance(expression_token, TypeSpecifier):
             return TypeSpecifierAtom(expression_token.representation)
         elif isinstance(expression_token, IntegerLiteral):
             return IntegerAtom(int(leading_token.representation))
@@ -483,6 +576,8 @@ def parse_expression(tokenstream):
             return VoidAtom(None)
         elif isinstance(expression_token, Identifier):
             return IdentifierAtom(expression_token.representation)
+        elif isinstance(expression_token, Reserved):
+            return ReservedAtom(expression_token.representation)
         else:
             raise ParsingException("Failed to recognize an expression from "
                                    "{}".format(expression_token))

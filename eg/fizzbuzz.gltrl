@@ -3,7 +3,7 @@
 # http://en.wikipedia.org/w/index.php?title=Fizz_buzz&oldid=662465165#Other_uses
 
 :=λ modulo |a ^int n ^int| → ^int
-   (:= quotient (÷ a n))
+   := quotient (÷ a n)
    (− a (⋅ quotient n))
 
 :=λ fizzbuzz |n ^int| → Void

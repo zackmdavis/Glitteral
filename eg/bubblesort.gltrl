@@ -9,7 +9,7 @@
    for |pass_through_list (range 0 10)|—
       for |i (range 0 9)|—
          if (misplaced? (_ this_list i) (_ this_list (+ i 1)))—
-            do
+            do—
                := i_plus_one (+ i 1)
                := temp (_ this_list i)
                _:= this_list i (_ this_list (+ i 1))

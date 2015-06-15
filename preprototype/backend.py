@@ -207,8 +207,12 @@ def generate_expression(expression):
             return generate_indeterminate_iteration(expression)
         elif isinstance(expression, DeterminateIteration):
             return generate_determinate_iteration(expression)
-        elif isinstance(expression, Application):
-            return generate_application(expression)
+        else:
+            raise CodeGenerationException(
+                "Couldn't generate code for alleged "
+                "Codeform {}".format(expression))
+    elif isinstance(expression, Application):
+        return generate_application(expression)
     elif isinstance(expression, Sequential):
         return generate_sequential(expression)
     elif isinstance(expression, Associative):
@@ -227,9 +231,14 @@ def generate_expression(expression):
         elif isinstance(expression, StringAtom):
             return '"{}{}"'.format(expression.value,
                                    semicolon_if_statementlike(expression))
+        else:
+            raise CodeGenerationException("Couldn't generate code for alleged "
+                                          "atom {}".format(expression))
+    else:
+        raise CodeGenerationException("Couldn't generate code for alleged "
+                                      "expression {}".format(expression))
 
 def generate_code(expressions):
-    logger.debug("expressions for which to generate code: %s", expressions)
     with open(
             os.path.join(
                 os.path.dirname(
