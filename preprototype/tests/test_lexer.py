@@ -88,7 +88,7 @@ class LexerTestCase(unittest.TestCase):
     def test_commentary(self):
         self.assertEqual(
             Lexer().tokenize("foo # This is a comment.\n2"),
-            [Identifier("foo"), Commentary(), IntegerLiteral("2")]
+            [Identifier("foo"), IntegerLiteral("2")]
         )
 
     def test_trailing_newline(self):
@@ -130,7 +130,7 @@ for [i (range 10)]—
              IntegerSpecifer("^int"), Pipe("|"), Arrow("→"),
              IntegerSpecifer("^int"), Indent(), OpenParenthesis("("),
              Identifier("+"), Identifier("a"), Identifier("b"),
-             CloseParenthesis(")"), Commentary(), Dedent()]
+             CloseParenthesis(")"), Dedent()]
 )
 
 class PreparsingTestCase(unittest.TestCase):

@@ -500,9 +500,6 @@ def parse_associative(tokenstream):
 def parse_expression(tokenstream):
     leading_token = tokenstream.peek()
     logger.debug("leading_token in parse_expression is %s", leading_token)
-    while isinstance(leading_token, Commentary):
-        tokenstream.pop()
-        leading_token = tokenstream.peek()
 
     if isinstance(leading_token, Keyword):  # indented codeforms
         return parse_codeform(tokenstream)

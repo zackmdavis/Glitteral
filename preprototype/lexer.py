@@ -358,7 +358,8 @@ class BaseLexer:
         if isinstance(matched, AbstractDent):
             self.indentation_match_special_handling(matched)
         else:
-            self.tokens.append(matched)
+            if not isinstance(matched, Commentary):
+                self.tokens.append(matched)
 
         if isinstance(matched, Delimiter):
             self.delimiter_match_special_handling(matched)
