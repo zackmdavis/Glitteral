@@ -334,9 +334,7 @@ class BaseLexer:
     def indentation_match_special_handling(self, matched):
         new_offset = int(len(matched.representation.strip('\n')) /
                          INDENTATION_WIDTH)
-        if new_offset == self.indentation_level:
-            ...
-        else:
+        if new_offset != self.indentation_level:
             if new_offset > self.indentation_level:
                 dent_class = Indent
             elif new_offset < self.indentation_level:

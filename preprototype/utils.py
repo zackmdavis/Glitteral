@@ -51,3 +51,15 @@ def get_logger(name):
     logger.setLevel(level_from_environment)
     logger.addHandler(logging.StreamHandler())
     return logger
+
+def oxford_series(items):
+    conjuncts = [str(i) for i in items]
+    if len(conjuncts) == 0:
+        return ''
+    if len(conjuncts) == 1:
+        return conjuncts[0]
+    if len(conjuncts) == 2:
+        return ' and '.join(conjuncts)
+    else:
+        return ', and '.join(
+            [', '.join(conjuncts[:-1]), conjuncts[-1]])
