@@ -38,9 +38,9 @@ class FrontendTestCase(unittest.TestCase):
 := a [1 2 3]
 for |i a|—
    (println a)
-2"""
+"""
         annotated = list(annotate(parse(lex(source))))
-        def_a, for_i_in_a, _XXX_FIXME_workaround_for_awful_bug = annotated
+        def_a, for_i_in_a = annotated
         self.assertIsNone(def_a.global_environment.get('a'))
         self.assertEqual(
             List([IntegerAtom(1), IntegerAtom(2), IntegerAtom(3)]),

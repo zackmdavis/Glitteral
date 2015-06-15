@@ -26,11 +26,10 @@ class TokenClassMatchingTestCase(unittest.TestCase):
 
 class LexerTestCase(unittest.TestCase):
 
-    def test_tokenize_codeform(self):
+    def test_tokenize_application(self):
         self.assertEqual(
-            Lexer().tokenize("(foo ^str 'bar' \"quux\" 3)"),
+            Lexer().tokenize("(foo 'bar' \"quux\" 3)"),
             [OpenParenthesis("("), Identifier("foo"),
-             StringSpecifier("^str"),
              InternLiteral("'bar'"), StringLiteral('"quux"'),
              IntegerLiteral("3"), CloseParenthesis(")")]
         )
@@ -102,13 +101,37 @@ class LexerTestCase(unittest.TestCase):
 
     def test_tokenize_determinate_iteration(self):
         self.assertEqual(
-            Lexer().tokenize("""(for [i (range 10)] (print i))"""),
-            [OpenParenthesis("("), For("for"), OpenBracket("["), Identifier("i"),
+            Lexer().tokenize("""
+for [i (range 10)]—
+   (print i)
+"""),
+            [For("for"), OpenBracket("["), Identifier("i"),
              OpenParenthesis("("), Identifier("range"), IntegerLiteral("10"),
-             CloseParenthesis(")"), CloseBracket("]"), OpenParenthesis("("),
-             Identifier("print"), Identifier("i"), CloseParenthesis(")"),
-             CloseParenthesis(")")]
+             CloseParenthesis(")"), CloseBracket("]"), Dash("—"), Indent(),
+             OpenParenthesis("("), Identifier("print"), Identifier("i"),
+             CloseParenthesis(")"), Dedent()]
         )
+
+    def test_tokenize_assignment(self):
+        self.assertEqual(
+            Lexer().tokenize(":= glitteral_is_splendid Truth\n"),
+            [Def(":="), Identifier("glitteral_is_splendid"),
+             BooleanLiteral("Truth")]
+        )
+
+    def test_tokenize_named_function_with_commentary(self):
+        source = """:=λ add_these |a ^int b ^int| → ^int
+   (+ a b)  # This is a comment!
+"""
+        self.assertEqual(
+            Lexer().tokenize(source),
+            [Deflambda(":=λ"), Identifier("add_these"), Pipe("|"),
+             Identifier("a"), IntegerSpecifer("^int"), Identifier("b"),
+             IntegerSpecifer("^int"), Pipe("|"), Arrow("→"),
+             IntegerSpecifer("^int"), Indent(), OpenParenthesis("("),
+             Identifier("+"), Identifier("a"), Identifier("b"),
+             CloseParenthesis(")"), Commentary(), Dedent()]
+)
 
 class PreparsingTestCase(unittest.TestCase):
 

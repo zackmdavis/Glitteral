@@ -200,7 +200,7 @@ class IntegerLiteral(Token):
     recognizer = re.compile(r"\d+$(?!\n)")
 
 class BooleanLiteral(Reserved):
-    recognizer = re.compile(r"(?:Truth)$|(?:Falsity)$(?!\n)")
+    recognizer = re.compile(r"(Truth$(?!\n))|(Falsity$(?!\n))")
 
 class VoidLiteral(Reserved):
     recognizer = re.compile(r"Void$(?!\n)")
@@ -280,8 +280,7 @@ class Commentary(Token):
         # it's not meant for us; don't even bother reading it
         self.representation = ''
 
-    prefix_recognizer = re.compile(r"#.*$(?!\n)")
-    recognizer = re.compile(r"#.*\n$(?!\n)")
+    recognizer = re.compile(r"#.*$(?!\n)")
 
 
 class EndOfFile(Token):
