@@ -1,23 +1,25 @@
-(:=λ modulo |a ^int n ^int| → ^int
-   (:= quotient (÷ a n))
-   (− a (⋅ quotient n)))
+# ASPIRATIONAL
 
-(:=λ collatz_advance |n ^int| → ^int
-   (if (= (modulo n 2) 0)
+:=λ modulo |a ^int n ^int| → ^int
+   := quotient (÷ a n)
+   (− a (⋅ quotient n))
+
+:=λ collatz_advance |n ^int| → ^int
+   if (= (modulo n 2) 0)—
       (÷ n 2)
-      (+ (⋅ 3 n) 1)))
+      (+ (⋅ 3 n) 1)
 
-(:=λ collatz_from_n |n ^int| → Void
-   (:= result n)
+:=λ collatz_from_n |n ^int| → Void
+   := result n
    (print result)
-   (while (≠ result 1)
-      (:= result (collatz_advance result))
+   while (≠ result 1)—
+      := result (collatz_advance result)
       (print " ")
-      (print result))
-   (println ""))
+      (print result)
+   (println "")
 
-(for |i (range 1 21)|
-   (collatz_from_n i))
+for |i (range 1 21)|—
+   (collatz_from_n i)
 
 # Expected output—
 # 1

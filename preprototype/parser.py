@@ -1,7 +1,7 @@
 from collections import namedtuple, ChainMap
 
 from lexer import *  # yeah, yeah
-from utils import twopartitions, get_logger
+from utils import twopartitions, get_logger, oxford_series
 
 logger = get_logger(__name__)
 
@@ -183,7 +183,7 @@ class DeterminateIteration(Codeform):
             self.index_identifier, self.iterable
         )
 
-class Application(Codeform):
+class Application(Expression):
     def __init__(self, function, arguments):
         super().__init__()
         self.function = function
@@ -227,6 +227,8 @@ class Sequential(Expression):
 
 class List(Sequential):
     mutable = True
+    # XXX: are we actually using these bare token string representations
+    # anywhere?
     open_delimiter = '['
     close_delimiter = ']'
 
@@ -320,7 +322,14 @@ class VoidAtom(Atom):
 class PrimitiveAtom(Atom):
     ...
 
-class TypeSpecifierAtom(PrimitiveAtom):
+# Maybe??
+class DentAtom(Atom):
+    ...
+
+class ReservedAtom(Atom):
+    ...
+
+class TypeSpecifierAtom(Atom):
     ...
 
 class BuiltinAtom(Atom):
@@ -331,61 +340,123 @@ class BuiltinAtom(Atom):
 class ParsingException(Exception):
     ...
 
+
+def parse_rest(tokenstream, *, closer, item_parser=None):
+    if item_parser is None:
+        # because can't supply this as a ordinary default argument if we want
+        # this function defined earlier than `parse_expression` while Python is
+        # loading this module
+        item_parser = parse_expression
+    body = []
+    done_here = False
+    while not done_here:
+        next_token = tokenstream.peek()
+        if isinstance(next_token, closer):
+            tokenstream.pop()
+            done_here = True
+        else:
+            body.append(item_parser(tokenstream))
+    return body
+
+def parse_expression_expecting(tokenstream, *, being_instance,
+                               further_conditions=None):
+    """(`further_conditions` should be a dictionary whose keys are explanations
+    and whose values are predicates indicating whether the parsing is OK)"""
+    if further_conditions is None:
+        further_conditions = {}
+    expression = parse_expression(tokenstream)
+    if not (isinstance(expression, being_instance) and
+            all(condition(expression) for condition
+                in further_conditions.values())):
+        raise ParsingException("Expected {} such that {}; got {}".format(
+            being_instance.__class__.__name__,
+            oxford_series(further_conditions.keys()),
+            expression))
+    return expression
+
 def parse_codeform(tokenstream):
+    open_keyword = tokenstream.pop()
+    if not isinstance(open_keyword, Keyword):
+        raise ParsingException(
+            "Expected a keyword token, got {}.".format(open_keyword))
+
+    if open_keyword.representation == "if":
+        condition = parse_expression(tokenstream)
+        dash = parse_expression_expecting(
+            tokenstream,
+            being_instance=ReservedAtom,
+            further_conditions={'it\'s an em dash': lambda d: d.value == "—"}
+        )
+        indent = parse_expression_expecting(tokenstream,
+                                            being_instance=Indent)
+        consequent = parse_expression(tokenstream)
+        post_consequent = parse_expression(tokenstream)
+        if isinstance(post_consequent, Dedent):
+            return Conditional(condition, consequent)
+        else:
+            alternative = post_consequent
+            parse_expression_expecting(tokenstream, being_instance=Dedent)
+            return Conditional(condition, consequent, alternative)
+    elif open_keyword.representation == "when":
+        condition = parse_expression(tokenstream)
+        dash = parse_expression_expecting(
+            tokenstream,
+            being_instance=ReservedAtom,
+            further_conditions={'it\'s an em dash': lambda d: d.value == "—"}
+        )
+        indent = parse_expression_expecting(tokenstream,
+                                            being_instance=Indent)
+        body = parse_rest(tokenstream, closer=Dedent)
+        return SingletrackedConditional(condition, body)
+    elif open_keyword.representation == ":=":
+        # TODO: same error-checking guarantees throughout this entire (long)
+        # `parse_codeform` function
+        identifier, identified = [parse_expression(tokenstream)
+                                  for _ in range(2)]
+        return Definition(identifier, identified)
+    elif open_keyword.representation == "_:=":
+        collection, subscript, identified = [parse_expression(tokenstream)
+                                             for _ in range(3)]
+        return SubscriptAssignment(collection, subscript, identified)
+    elif open_keyword.representation == ":=λ":
+        name = parse_expression(tokenstream)
+        argument_sequential = parse_expression(tokenstream)
+        _arrow = parse_expression(tokenstream)
+        return_type = parse_expression(tokenstream)
+        indent = parse_expression(tokenstream)
+        body = parse_rest(tokenstream, closer=Dedent)
+        return NamedFunctionDefinition(name, argument_sequential, return_type,
+                                       body)
+    elif open_keyword.representation == "do":
+        dash, indent = [parse_expression(tokenstream) for _ in range(2)]
+        body = parse_rest(tokenstream, closer=Dedent)
+        return DoBlock(body)
+    elif open_keyword.representation == "for":
+        bindings = parse_expression(tokenstream)
+        index_identifier, iterable = bindings.elements
+        dash, indent = [parse_expression(tokenstream) for _ in range(2)]
+        body = parse_rest(tokenstream, closer=Dedent)
+        return DeterminateIteration(index_identifier, iterable, body)
+    elif open_keyword.representation == "while":
+        condition = parse_expression(tokenstream)
+        dash, indent = [parse_expression(tokenstream) for _ in range(2)]
+        body = parse_rest(tokenstream, closer=Dedent)
+        return IndeterminateIteration(condition, body)
+    else:
+        raise ParsingException("Expected keyword, got {}".format(open_keyword))
+
+def parse_application(tokenstream):
     open_paren = tokenstream.pop()
     if not isinstance(open_paren, OpenParenthesis):
         raise ParsingException(
             "Expected an open parenthesis token, got {}.".format(open_paren))
     first = parse_expression(tokenstream)
-    rest = []
-    done_here = False
-    while not done_here:
-        next_token = tokenstream.peek()
-        if isinstance(next_token, CloseParenthesis):
-            tokenstream.pop()
-            done_here = True
-        else:
-            rest.append(parse_expression(tokenstream))
+    rest = parse_rest(tokenstream, closer=CloseParenthesis)
 
-    if isinstance(first, IdentifierAtom):
-        return Application(first, rest)
-    elif isinstance(first, PrimitiveAtom):
-        if first.value == "if":
-            if len(rest) not in (2, 3):
-                raise ParsingException("Conditional expression must have 2 or "
-                                       "3 arguments.")
-            return Conditional(*rest)
-        elif first.value == "when":
-            condition, *body = rest
-            return SingletrackedConditional(condition, body)
-        elif first.value == ":=":
-            if len(rest) != 2:
-                raise ParsingException("Definition must have 2 arguments, got "
-                                       "%s", rest)
-            if not isinstance(rest[0], IdentifierAtom):
-                raise ParsingException("First argument to definition must be "
-                                       "identifier.")
-            return Definition(*rest)
-        elif first.value == "_:=":
-            if len(rest) != 3:
-                raise ParsingException("Subscript assignment must have 3 "
-                                       "arguments, got {}".format(rest))
-            return SubscriptAssignment(*rest)
-        elif first.value == ":=λ":
-            # TODO: error checking
-            name, argument_sequential, _arrow, return_type, *expressions = rest
-            return NamedFunctionDefinition(
-                name, argument_sequential, return_type, expressions)
-        elif first.value == "do":
-            expressions = rest
-            return DoBlock(expressions)
-        elif first.value == "while":
-            condition, *body = rest
-            return IndeterminateIteration(condition, body)
-        elif first.value == "for":
-            bindings, *body = rest
-            index_identifier, iterable = bindings.elements
-            return DeterminateIteration(index_identifier, iterable, body)
+    if not isinstance(first, IdentifierAtom):
+        raise ParsingException("Expected first element of application to be "
+                               "an identifier, got {}".format(first))
+    return Application(first, rest)
 
 def parse_sequential(tokenstream):
     open_delimiter = tokenstream.pop()
@@ -395,19 +466,11 @@ def parse_sequential(tokenstream):
                                "or '|'), got {}".format(open_delimiter))
     if isinstance(open_delimiter, OpenBracket):
         sequential_class = List
+        closer = CloseBracket
     elif isinstance(open_delimiter, Pipe):
         sequential_class = Vector
-    elements = []
-    done_here = False
-    # TODO: unify this loop with its analogue in parse_codeform?
-    while not done_here:
-        next_token = tokenstream.peek()
-        if (isinstance(next_token, SequentialDelimiter) and
-            isinstance(next_token, CloseDelimiter)):
-            tokenstream.pop()
-            done_here = True
-        else:
-            elements.append(parse_expression(tokenstream))
+        closer = Pipe
+    elements = parse_rest(tokenstream, closer=closer)
     return sequential_class(elements)
 
 def parse_association(tokenstream):
@@ -420,36 +483,29 @@ def parse_association(tokenstream):
 
 def parse_associative(tokenstream):
     open_delimiter = tokenstream.pop()
-    if not (isinstance(open_delimiter, AssociativeDelimiter) or
-            not isinstance(open_delimiter, OpenDelimiter)):
-        raise ParsingException("Expected an opening sequential delimiter ('{{' "
+    if not (isinstance(open_delimiter, AssociativeDelimiter) and
+            isinstance(open_delimiter, OpenDelimiter)):
+        raise ParsingException("Expected an opening associative delimiter ('{{' "
                                "or '<'), got {}".format(open_delimiter))
     if isinstance(open_delimiter, OpenBrace):
         associative_class = Dictionary
-    # elif isinstance(open_delimiter, ... uh, we need to call the '<' something):
-    #     TODO
-    associations = []
-    done_here = False
-    # TODO: somehow unify with similar loop in `parse_sequential`??
-    while not done_here:
-        next_token = tokenstream.peek()
-        if isinstance(next_token, CloseDelimiter):
-            tokenstream.pop()
-            done_here = True
-        else:
-            associations.append(parse_association(tokenstream))
+        closer = CloseBrace
+    # elif isinstance(open_delimiter, ... uh, we need to call the '<' something)
+    else:
+        raise NotImplementedError("TODO: parse Glitteral hashtables")
+    associations = parse_rest(tokenstream,
+                              closer=closer, item_parser=parse_association)
     return associative_class(associations)
 
 def parse_expression(tokenstream):
     leading_token = tokenstream.peek()
     logger.debug("leading_token in parse_expression is %s", leading_token)
-    while isinstance(leading_token, Commentary):
-        tokenstream.pop()
-        leading_token = tokenstream.peek()
 
-    if isinstance(leading_token, OpenDelimiter):  # collections
+    if isinstance(leading_token, Keyword):  # indented codeforms
+        return parse_codeform(tokenstream)
+    elif isinstance(leading_token, OpenDelimiter):  # collections
         if isinstance(leading_token, OpenParenthesis):
-            return parse_codeform(tokenstream)
+            return parse_application(tokenstream)
         elif (isinstance(leading_token, OpenBracket) or
             isinstance(leading_token, Pipe)):
             return parse_sequential(tokenstream)
@@ -465,7 +521,17 @@ def parse_expression(tokenstream):
         expression_token = tokenstream.pop()
         if isinstance(expression_token, Keyword):
             return PrimitiveAtom(expression_token.representation)
-        if isinstance(expression_token, TypeSpecifier):
+        elif isinstance(expression_token, AbstractDent):
+            # XXX INCONSISTENCY TODO FIXME RESEARCH: the
+            # indent/dedent/aligned-newline tokens don't have representations;
+            # rather than recreate parallel boilerplate here, maybe try out
+            # letting the token stand for itself?? Distinguishing "atoms" in
+            # this module and "tokens" in the lexer seemed like a good idea on
+            # the grounds that lexing and parsing are different things, but
+            # maybe the token/atom distinction isn't actually buying us very
+            # much??
+            return expression_token
+        elif isinstance(expression_token, TypeSpecifier):
             return TypeSpecifierAtom(expression_token.representation)
         elif isinstance(expression_token, IntegerLiteral):
             return IntegerAtom(int(leading_token.representation))
@@ -479,6 +545,8 @@ def parse_expression(tokenstream):
             return VoidAtom(None)
         elif isinstance(expression_token, Identifier):
             return IdentifierAtom(expression_token.representation)
+        elif isinstance(expression_token, Reserved):
+            return ReservedAtom(expression_token.representation)
         else:
             raise ParsingException("Failed to recognize an expression from "
                                    "{}".format(expression_token))

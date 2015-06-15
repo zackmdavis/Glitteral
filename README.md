@@ -8,20 +8,20 @@
 
 ```
 $ cat demo.gltrl 
-(:= glitteral_is_splendid Truth)
+:= glitteral_is_splendid Truth
 
-(:=λ first_plus_square_of_second |a ^int b ^int| → ^int
-   (+ a (⋅ b b)))  # This is a comment.
+:=λ first_plus_square_of_second |a ^int b ^int| → ^int
+   (+ a (⋅ b b))  # This is a comment!
 
-(:= my_list [1 2 3])
+:= my_list [1 2 3]
 (append! my_list 4)
 
-(when glitteral_is_splendid
-   (if (= (first_plus_square_of_second 1 2) 5)
-      (_:= my_list 0 10)))
+when glitteral_is_splendid—
+   if (= (first_plus_square_of_second 1 2) 5)—
+      _:= my_list 0 10
 
-(for |i my_list|
-   (print_integer i))
+for |i my_list|—
+   (println i)
 $ ./glitteralc demo.gltrl 
 $ ./demo 
 10
@@ -69,47 +69,40 @@ Void
 # anonymous functions
 (λ argument-container body)
 
+# Fundamental language constructs (control flow like `if`, `while`,
+# and `for`, or definitions like `:=`, `:=λ`, and `let`) are indicated
+# by a dash and an indented block (three spaces per indentation),
+# whereas function calls are traditional s-expressions.  (Thanks to
+# Rory O'Kane for syntax suggestions.)
+
 # named function definitions
-(:=λ name argument-container body)
+:=λ name argument-container → return_type_specifier
+   body
 
 # Both underscores and hyphens are legal in identifier names, but
-# (contrary to what patriotic fools will tell you is essential to
-# Lisp-likeness) _underscores_ are strongly encouraged except where you
-# would actually use a hyphen when writing English.
+# _underscores_ are strongly encouraged except where you would
+# actually use a hyphen when writing English.
 
-(:=λ my_super-great_function |foo ^int bar ^float| → ^float
-  (let |foo_times_two (⋅ 2 foo)
-        quux_of_bar (quux bar)|
-     (÷ foo_times_two quux_of_bar)))
+:=λ my_super-great_function |foo ^int bar ^float| → ^float
+  let |foo_times_two (⋅ 2 foo)
+       quux_of_bar (quux bar)|—
+     (÷ foo_times_two quux_of_bar)
 
 # global variable declaration
-(:= foo ^int 3)
+:= foo 3
 
 # instead of Lisp-like "apply", we have Python-like "positional glitter"—
 
-(:= my_numbers ^[int] |1 2 3|)
+:= my_numbers |1 2 3|
 
-(:=λ add_three_numbers [a b c] <>
-  (+ a b c))
+:=λ add_three_numbers [a ^int b ^int c ^int] → ^int
+   (+ a b c)
 
 (add_three_numbers *my_numbers)  # => 6
 
 # and "associative glitter"—
 
 (my_function_with_kwargs **<'foo' "bar"; 'quux' 2;>)
-
-# SYNTAX REFORM—
-
-# (Thanks to Rory O'Kane's suggestions in Issue #1.) While retaining
-# traditional everything-is-an-expression semantics, fundamental
-# language control-flow constructs (if, while, for, :=, :=λ, but maybe
-# not _:=) will be indicated by indentation (three spaces), whereas
-# function calls remain traditional s-expressions.
-
-when glitteral_is_splendid
-   if (= (first_plus_square_of_second 1 2) 5)
-      (_:= my_list 0 10)
-
 ```
 
 #### About the name

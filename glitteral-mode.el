@@ -8,19 +8,23 @@
   (interactive)
   (insert "λ"))
 
+(defun glitteral-insert-dash ()
+  (interactive)
+  (insert "—"))
+
 (defun glitteral-insert-arrow ()
   (interactive)
   (insert "→"))
 
-(defun glitteral-insert-subtraction-sign ()
+(defun glitteral-insert-subtraction ()
   (interactive)
   (insert "−"))
 
-(defun glitteral-insert-multiplication-dot ()
+(defun glitteral-insert-multiplication ()
   (interactive)
   (insert "⋅"))
 
-(defun glitteral-insert-division-sign ()
+(defun glitteral-insert-division ()
   (interactive)
   (insert "÷"))
 
@@ -32,18 +36,18 @@
   (let ((map (make-keymap)))
     (define-key map (kbd "M-d") 'glitteral-insert-def)
     (define-key map (kbd "M-l") 'glitteral-insert-lambda)
+    (define-key map (kbd "M-_") 'glitteral-insert-dash)
     (define-key map (kbd "M-*") 'glitteral-insert-multiplication-dot)
     (define-key map [M-kp-divide] 'glitteral-insert-division-sign)
     map)
   "Keymap for Glitteral major mode")
 
-(defconst glitteral-keywords
-  '("if" "for" "λ" ":=" ":=λ" "_:="))
+(defconst glitteral-indentation-width 3)
 
 (defconst glitteral-font-lock-keywords
   `(("#.*$" 0 font-lock-comment-face)
 
-    (,(concat "(\\("
+    (,(concat "\\("
               (regexp-opt '(":=λ"))
               "\\)\\>"
               ;; whitespace
@@ -53,7 +57,7 @@
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face nil t))
 
-    (,(concat "(\\("
+    (,(concat "\\("
               (regexp-opt '(":=" "_:="))
               "\\)"
               ;; whitespace
@@ -69,6 +73,12 @@
     (,(concat "\\<" (regexp-opt '("for" "if" "while" "do")) "\\>")
      0 font-lock-keyword-face)
 
+    ;; XXX TODO FIXME: "=" and "append!" don't seem to work?!
+    (,(concat "\\<" (regexp-opt '("append!" "length" "=" "greater?" "less?"
+                                  "not_greater?" "not_less?" "range" "print"
+                                  "println" "input" "and" "or" "λ")) "\\>")
+     0 font-lock-builtin-face)
+
     ("\\^int" 0 font-lock-type-face)
     ("\\^str" 0 font-lock-type-face)
     ("\\^bool" 0 font-lock-type-face)
@@ -79,21 +89,48 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gltrl\\'" . glitteral-mode))
 
-(defun glitteral-mode ()
-  "Major mode for editing Glitteral source code"
+(defun glitteral-get-line-indentation-level ()
   (interactive)
-  (kill-all-local-variables)
+  (save-excursion
+    (move-beginning-of-line nil)
+    (re-search-forward "[^\s-]")
+    (backward-char)
+    (/ (current-column) glitteral-indentation-width)))
+
+(defun glitteral-set-line-indentation-level (level)
+  (save-excursion
+    (move-beginning-of-line nil)
+    (let ((start-of-line (point)))
+      (re-search-forward "[^\s-]")
+      (backward-char)
+      (delete-region start-of-line (point)))
+    (insert-char ?  (* glitteral-indentation-width level))))
+
+(defun glitteral-indent-line ()
+  ;; TODO: detect if point is delimited, use different rule in that case
+  (interactive)
+  (let* ((previous-indent (save-excursion
+                            (previous-line)
+                            (glitteral-get-line-indentation-level)))
+         (current-indent (glitteral-get-line-indentation-level)))
+    (if (> current-indent previous-indent)
+        (glitteral-set-line-indentation-level 0)
+      (glitteral-set-line-indentation-level (1+ current-indent)))))
+
+;;;###autoload
+(define-derived-mode glitteral-mode prog-mode "Glitteral"
+  "Major mode for editing Glitteral source code"
   (use-local-map glitteral-mode-map)
 
   (setq font-lock-defaults '(glitteral-font-lock-keywords))
   (setq-local comment-start-skip "#+\\s-*")
   (setq-local comment-start "#")
 
-  (setq-local indent-line-function 'lisp-indent-line)
-  (setq-local lisp-indent-offset 3)
+  (setq-local indent-line-function 'glitteral-indent-line)
 
-  (setq major-mode 'glitteral-mode)
   (setq mode-name "Glitteral")
+  (setq major-mode 'glitteral-mode)
+
   (run-hooks 'glitteral-mode-hook))
 
 (provide 'glitteral-mode)
