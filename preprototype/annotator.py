@@ -35,6 +35,7 @@ global_environment = {
     # where Glitteral wants different semantics (or can we smooth over
     # some of this with traits??) ...
     '_': BuiltinAtom("get_subscript", special=True),
+    'comprehend': BuiltinAtom("comprehend", special=True)
 }
 
 class IterInto:

@@ -37,8 +37,8 @@
     (define-key map (kbd "M-d") 'glitteral-insert-def)
     (define-key map (kbd "M-l") 'glitteral-insert-lambda)
     (define-key map (kbd "M-_") 'glitteral-insert-dash)
-    (define-key map (kbd "M-*") 'glitteral-insert-multiplication-dot)
-    (define-key map [M-kp-divide] 'glitteral-insert-division-sign)
+    (define-key map (kbd "M-*") 'glitteral-insert-multiplication)
+    (define-key map [M-kp-divide] 'glitteral-insert-division)
     map)
   "Keymap for Glitteral major mode")
 
