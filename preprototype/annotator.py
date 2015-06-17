@@ -8,8 +8,8 @@ logger = get_logger(__name__)
 
 
 global_environment = {
-    '+': BuiltinAtom("add_integers"), '−': BuiltinAtom("subtract_integers"),
-    '⋅': BuiltinAtom("multiply_integers"), '÷': BuiltinAtom("divide_integers"),
+    '+': BuiltinAtom("add"), '−': BuiltinAtom("subtract"),
+    '⋅': BuiltinAtom("multiply"), '÷': BuiltinAtom("divide"),
     '=': BuiltinAtom("integers_equal"), '≠': BuiltinAtom("integers_not_equal"),
 
     'append!': BuiltinAtom("append"), 'length': BuiltinAtom("length"),
@@ -17,6 +17,9 @@ global_environment = {
     'not_greater?': BuiltinAtom("not_greater"),
     'not_less?': BuiltinAtom("not_less"),
     'range': BuiltinAtom("range"),
+    'sleep': BuiltinAtom("sleep"),
+    'current_time': BuiltinAtom("current_time"),
+    'parse_float': BuiltinAtom("parse_float"),
 
     # TODO: variadics?
     # TODO: unify prints (glitteralc should be smart enough to
@@ -57,9 +60,6 @@ def propogate_environments(expression, statementlike=True):
         global_environment[expression.identifier.value] = expression.identified
     if isinstance(expression, NamedFunctionDefinition):
         global_environment[expression.name.value] = expression
-
-    logger.debug("expression %s recieved global environment %s",
-                 expression, expression.global_environment)
 
     for i, child in enumerate(expression.children):
         # set locals for :=λ, let, for, &c.

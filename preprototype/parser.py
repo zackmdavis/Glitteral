@@ -310,6 +310,9 @@ class Argument(IdentifierAtom):
 class IntegerAtom(Atom):
     ...
 
+class FloatAtom(Atom):
+    ...
+
 class StringAtom(Atom):
     ...
 
@@ -535,6 +538,8 @@ def parse_expression(tokenstream):
             return TypeSpecifierAtom(expression_token.representation)
         elif isinstance(expression_token, IntegerLiteral):
             return IntegerAtom(int(leading_token.representation))
+        elif isinstance(expression_token, FloatLiteral):
+            return FloatAtom(float(leading_token.representation))
         elif isinstance(expression_token, StringLiteral):
             return StringAtom(expression_token.representation.strip('"'))
         elif isinstance(expression_token, BooleanLiteral):

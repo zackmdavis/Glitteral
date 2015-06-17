@@ -14,6 +14,7 @@ class TokenClassMatchingTestCase(unittest.TestCase):
             '"romance"': StringLiteral,
             "'rocketry'": InternLiteral,
             "2015": IntegerLiteral,
+            "2.718": FloatLiteral,
             "^int": IntegerSpecifer,
             "|": Pipe
         }
@@ -67,6 +68,12 @@ class LexerTestCase(unittest.TestCase):
                 Lexer().tokenize(boolean),
                 [BooleanLiteral(boolean)]
             )
+
+    def test_recognize_floats(self):
+        for float_literal in ("1.0", "1.", ".01"):
+            with self.subTest(f=float_literal):
+                self.assertEqual(Lexer().tokenize(float_literal),
+                                 [FloatLiteral(float_literal)])
 
     def test_recognize_void(self):
         self.assertEqual(Lexer().tokenize("Void"), [VoidLiteral("Void")])

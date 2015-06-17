@@ -70,7 +70,7 @@
     (,(concat "\\<" (regexp-opt '("Truth" "Falsity" "Void")) "\\>")
      0 font-lock-constant-face)
 
-    (,(concat "\\<" (regexp-opt '("for" "if" "while" "do")) "\\>")
+    (,(concat "\\<" (regexp-opt '("for" "if" "while" "do" "when")) "\\>")
      0 font-lock-keyword-face)
 
     ;; XXX TODO FIXME: "=" and "append!" don't seem to work?!
@@ -80,6 +80,7 @@
      0 font-lock-builtin-face)
 
     ("\\^int" 0 font-lock-type-face)
+    ("\\^float" 0 font-lock-type-face)
     ("\\^str" 0 font-lock-type-face)
     ("\\^bool" 0 font-lock-type-face)
     ("\\^\\[int\\]" 0 font-lock-type-face)

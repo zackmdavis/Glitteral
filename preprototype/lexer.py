@@ -105,6 +105,7 @@ def type_specifier_class(type_name, type_specifier):
     )
 
 IntegerSpecifer = type_specifier_class("Integer", "int")
+FloatSpecifer = type_specifier_class("Float", "float")
 StringSpecifier = type_specifier_class("String", "str")
 BooleanSpecifier = type_specifier_class("Boolean", "bool")
 
@@ -198,6 +199,10 @@ class InternLiteral(Token):
 
 class IntegerLiteral(Token):
     recognizer = re.compile(r"\d+$(?!\n)")
+
+class FloatLiteral(Token):
+    prefix_recognizer = re.compile("[0-9.]$(?!\n)")
+    recognizer = re.compile(r"(\d+\.\d*$(?!\n))|(\.\d+$(?!\n))")
 
 class BooleanLiteral(Reserved):
     recognizer = re.compile(r"(Truth$(?!\n))|(Falsity$(?!\n))")
@@ -426,7 +431,7 @@ class BaseLexer:
 
 BASE_KEYWORDS = [If, When, For, While, Lambda, Def, SubscriptDef, Deflambda, Do]
 TYPE_SPECIFIERS = [
-    IntegerSpecifer, StringSpecifier, BooleanSpecifier,
+    IntegerSpecifer, FloatSpecifer, StringSpecifier, BooleanSpecifier,
     IntegerListSpecifier, StringListSpecifier,
     Arrow
 ]
@@ -439,8 +444,8 @@ TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + OTHER_RESERVED + INDENTATION + 
     OpenBrace, CloseBrace,
     Semicolon,
     Pipe,
+    IntegerLiteral, FloatLiteral,
     StringLiteral, InternLiteral,
-    IntegerLiteral,
     BooleanLiteral, VoidLiteral,
     Commentary,
     EndOfFile

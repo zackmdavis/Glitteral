@@ -1,0 +1,49 @@
+# based on fallsim.py by James Cook
+
+:=λ square |x ^float| → ^float
+   (⋅ x x)
+
+:= acceleration 9.807
+:= terminal_velocity 54.
+:= time_to_terminal_velocity (÷ terminal_velocity acceleration)
+:= distance_to_terminal_velocity (⋅ (⋅ 0.5 acceleration)
+                                    (square time_to_terminal_velocity))
+
+:=λ distance_fallen |elapsed ^float| → ^float
+   # XXX :( repeating these constant definitions inside of the
+   # function with different names due to at least two unresolved
+   # scoping issues (no pun in ten did)
+   := a 9.807
+   := tv 54.
+   := t_to_tv (÷ tv a)
+   := d_to_tv (⋅ (⋅ 0.5 a)
+                 (square t_to_tv))
+   := distance 0.  # more scope troubles :(
+   if (not_greater? elapsed t_to_tv)—
+      := distance (⋅ (⋅ 0.5 a) (square elapsed))
+      := distance (+ d_to_tv
+                     (⋅ tv (− elapsed t_to_tv)))
+   distance
+
+
+(println "Enter starting altitude in meters.")
+:= starting_altitude (parse_float (input))
+:= current_altitude starting_altitude
+:= start_time (current_time)
+while (greater? current_altitude 0.)—
+   := elapsed_time (− (current_time) start_time)
+   := speed 0.  # this so-called compiler is terrible
+   if (not_greater? elapsed_time time_to_terminal_velocity)—
+      := speed (⋅ acceleration elapsed_time)
+      := speed terminal_velocity
+   := current_altitude (− starting_altitude (distance_fallen elapsed_time))
+   when (not_less? current_altitude 0.)—
+      (print " altitude: ")
+      (print current_altitude)
+      (print " speed: ")
+      (print speed)
+      (print " time: ")
+      (print elapsed_time)
+      (println "")
+
+(println "IMPACT")

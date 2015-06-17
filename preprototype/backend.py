@@ -22,7 +22,8 @@ autoidentifier_sequence = (
 
 
 def rustify_type_specifier(type_specifier_atom):
-    return {'^int': "isize", '^str': "&str", '^bool': "bool",
+    return {'^int': "isize", '^float': "f64",
+            '^str': "&str", '^bool': "bool",
             '^[int]': "&mut Vec<isize>", None: "()"}[type_specifier_atom.value]
 
 def rustify_argument(argument):
@@ -263,6 +264,9 @@ def generate_expression(expression):
             return represent_identifiable(expression)
         elif isinstance(expression, IntegerAtom):
             return "{}isize{}".format(expression.value,
+                                      semicolon_if_statementlike(expression))
+        elif isinstance(expression, FloatAtom):
+            return "{}f64{}".format(expression.value,
                                       semicolon_if_statementlike(expression))
         elif isinstance(expression, BooleanAtom):
             return ("true{}" if expression.value else "false{}").format(
