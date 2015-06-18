@@ -2,6 +2,7 @@ import functools
 import itertools
 import logging
 import os
+import re
 
 class LookaheadStream:
     def __init__(self, generator):
@@ -27,6 +28,13 @@ class LookaheadStream:
     def pop(self):
         return next(self)
 
+def regex_opt(*alternatives):
+    # TODO: try to be more efficient than `'|'.join`, the way that the
+    # namesake Emacs `regexp-opt` does
+    return re.compile(r'|'.join(r"(?:{})".format(a) for a in alternatives))
+
+def prefixes(word):
+    return [word[:i] for i in range(len(word)+1)]
 
 def npartitions(n, sliceable):
     return zip(*(sliceable[slice(i, None, n)] for i in range(n)))
