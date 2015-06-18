@@ -221,19 +221,18 @@ class Sequential(Expression):
     def __repr__(self):
         return "<{}: {}{}{}>".format(
             self.__class__.__name__,
-            self.open_delimiter, ' '.join(repr(el) for el in self.elements),
-            self.close_delimiter
+            self.open_delimiter_character,
+            ' '.join(repr(el) for el in self.elements),
+            self.close_delimiter_character
         )
 
 class List(Sequential):
     mutable = True
-    # XXX: are we actually using these bare token string representations
-    # anywhere?
-    open_delimiter = '['
-    close_delimiter = ']'
+    open_delimiter_character = '['
+    close_delimiter_character = ']'
 
 class Vector(Sequential):
-    open_delimiter = close_delimiter = '|'
+    open_delimiter_character = close_delimiter_character = '|'
 
 
 class Associative(Expression):
@@ -272,12 +271,12 @@ class Association:
 
 class Dictionary(Associative):
     mutable = True
-    open_delimiter = '{'
-    close_delimiter = '}'
+    open_delimiter_character = '{'
+    close_delimiter_character = '}'
 
 class Hashtable(Associative):
-    open_delimiter = '<'
-    close_delimiter = '>'
+    open_delimiter_character = '<'
+    close_delimiter_character = '>'
 
 
 class Atom(Expression):
@@ -368,14 +367,22 @@ def parse_expression_expecting(tokenstream, *, being_instance,
     if further_conditions is None:
         further_conditions = {}
     expression = parse_expression(tokenstream)
-    if not (isinstance(expression, being_instance) and
-            all(condition(expression) for condition
-                in further_conditions.values())):
+    violated_expectations = []
+    if not isinstance(expression, being_instance):
+        violated_expectations.append(
+            "{} is an instance of {}".format(expression, being_instance)
+        )
+    for description, condition in further_conditions.items():
+        if not condition(expression):
+            violated_expectations.append(description)
+    if not violated_expectations:
+        return expression
+    else:
         raise ParsingException("Expected {} such that {}; got {}".format(
             being_instance.__class__.__name__,
-            oxford_series(further_conditions.keys()),
-            expression))
-    return expression
+            oxford_series(violated_expectations),
+            expression)
+        )
 
 def parse_codeform(tokenstream):
     open_keyword = tokenstream.pop()
@@ -473,7 +480,16 @@ def parse_sequential(tokenstream):
     elif isinstance(open_delimiter, Pipe):
         sequential_class = Vector
         closer = Pipe
-    elements = parse_rest(tokenstream, closer=closer)
+    next_token = tokenstream.peek()
+    if isinstance(next_token, Ellipsis):
+        _ellipsis = tokenstream.pop()
+        # TODO: error checking
+        _close_block_signifier = tokenstream.pop()
+        _dash = tokenstream.pop()
+        _indent = parse_expression_expecting(tokenstream, being_instance=Indent)
+        elements = parse_rest(tokenstream, closer=Dedent)
+    else:
+        elements = parse_rest(tokenstream, closer=closer)
     return sequential_class(elements)
 
 def parse_association(tokenstream):

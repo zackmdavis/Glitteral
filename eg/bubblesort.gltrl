@@ -1,6 +1,14 @@
-# ASPIRATIONAL FOR THE MOMENT
-
-:= my_list [5 6 2 9 7 3 1 0 8 4]
+:= my_list […]—
+   5
+   6
+   2
+   9
+   7
+   3
+   1
+   0
+   8
+   4
 
 :=λ misplaced? |first ^int second ^int| → ^bool
    (greater? first second)

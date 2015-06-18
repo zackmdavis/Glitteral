@@ -3,9 +3,13 @@
 :=λ first_plus_square_of_second |a ^int b ^int| → ^int
    (+ a (⋅ b b))  # This is a comment!
 
-# := my_list (comprehend [] |i (range 5)| (+ i 1))
-:= my_list [1 2 3]
-(append! my_list 4)
+:= my_list […]—
+   1
+   2
+   3
+   4
+
+(println_container my_list)
 
 when glitteral_is_splendid—
    if (= (first_plus_square_of_second 1 2) 5)—

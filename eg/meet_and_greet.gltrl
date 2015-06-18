@@ -1,5 +1,3 @@
-# ASPIRATIONAL
-
 (println "Hello! What is your name?")
 := their_name (input)
 (print "Hello, ")

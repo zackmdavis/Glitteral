@@ -1,5 +1,3 @@
-# ASPIRATIONAL
-
 :=λ modulo |a ^int n ^int| → ^int
    := quotient (÷ a n)
    (− a (⋅ quotient n))

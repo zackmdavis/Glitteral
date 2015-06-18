@@ -55,3 +55,20 @@ for |i a|—
         dictionary_literal_node = def_dee.identified
         self.assertEqual(IdentifierAtom("dee"),
                          dictionary_literal_node.identifier)
+
+    def test_block_sequential_literals(self):
+        sequential_types = (List, Vector)
+        for sequential_type in sequential_types:
+            source = """
+{}…{}—
+   1
+   2
+   3
+""".format(sequential_type.open_delimiter_character,
+           sequential_type.close_delimiter_character)
+            parsed = list(parse(lex(source)))
+            annotated = list(annotate(parsed))
+            sequential, = annotated
+            self.assertEqual(sequential_type, sequential.__class__)
+            self.assertEqual([IntegerAtom(i) for i in (1, 2, 3)],
+                             sequential.elements)

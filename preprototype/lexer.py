@@ -122,6 +122,9 @@ class StringListSpecifier(TypeSpecifier):
     recognizer = re.compile(r"\^\[str]$(?!\n)")
 
 
+class Ellipsis(Reserved):
+    recognizer = re.compile("…$(?!\n)")
+
 class Delimiter(Token):
     ...
 
@@ -435,7 +438,7 @@ TYPE_SPECIFIERS = [
     IntegerListSpecifier, StringListSpecifier,
     Arrow
 ]
-OTHER_RESERVED = [Dash]
+OTHER_RESERVED = [Dash, Ellipsis]
 INDENTATION = [Indent, Dedent, AlignedNewline]
 TOKENCLASSES = BASE_KEYWORDS + TYPE_SPECIFIERS + OTHER_RESERVED + INDENTATION + [
     Identifier,

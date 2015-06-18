@@ -7,6 +7,10 @@ from utils import get_logger
 logger = get_logger(__name__)
 
 
+class ContextHandlingException(Exception):
+    ...
+
+
 global_environment = {
     '+': BuiltinAtom("add"), '−': BuiltinAtom("subtract"),
     '⋅': BuiltinAtom("multiply"), '÷': BuiltinAtom("divide"),
@@ -47,6 +51,10 @@ class IterInto:
 
 
 def propogate_environments(expression, statementlike=True):
+    if isinstance(expression, AbstractDent):
+        raise ContextHandlingException(
+            "Unexpectedly recieved {} for annotation".format(expression))
+
     logger.debug("propogating environments for %sstatementlike expression %s",
                  'non-' if not statementlike else '', expression)
 

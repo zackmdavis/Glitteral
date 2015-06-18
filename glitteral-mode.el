@@ -6,39 +6,46 @@
 
 (defun glitteral-insert-lambda ()
   (interactive)
-  (insert "λ"))
+  (insert "λ"))  ; \u03BB
 
 (defun glitteral-insert-dash ()
   (interactive)
-  (insert "—"))
+  (insert "—"))  ; \u2014
 
 (defun glitteral-insert-arrow ()
   (interactive)
-  (insert "→"))
+  (insert "→"))  ; \u2192
 
 (defun glitteral-insert-subtraction ()
   (interactive)
-  (insert "−"))
+  (insert "−"))  ; \u2212
 
 (defun glitteral-insert-multiplication ()
   (interactive)
-  (insert "⋅"))
+  (insert "⋅"))  ; \u22C5
 
 (defun glitteral-insert-division ()
   (interactive)
-  (insert "÷"))
+  (insert "÷"))  ; \u00F7
 
 (defun glitteral-insert-not-equals ()
   (interactive)
-  (insert "≠"))
+  (insert "≠"))  ; \u2260
+
+(defun glitteral-insert-ellipsis ()
+  (interactive)
+  (insert "…"))  ; \u2026
+
 
 (defvar glitteral-mode-map
   (let ((map (make-keymap)))
     (define-key map (kbd "M-d") 'glitteral-insert-def)
     (define-key map (kbd "M-l") 'glitteral-insert-lambda)
     (define-key map (kbd "M-_") 'glitteral-insert-dash)
+    (define-key map [M-kp-subtract] 'glitteral-insert-subtraction)
     (define-key map (kbd "M-*") 'glitteral-insert-multiplication)
     (define-key map [M-kp-divide] 'glitteral-insert-division)
+    (define-key map (kbd "M-.") 'glitteral-insert-ellipsis)
     map)
   "Keymap for Glitteral major mode")
 
@@ -105,7 +112,9 @@
       (re-search-forward "[^\s-]")
       (backward-char)
       (delete-region start-of-line (point)))
-    (insert-char ?  (* glitteral-indentation-width level))))
+    (insert-char ?  (* glitteral-indentation-width level)))
+  (re-search-forward "[^\s-]")
+  (backward-char))
 
 (defun glitteral-indent-line ()
   ;; TODO: detect if point is delimited, use different rule in that case

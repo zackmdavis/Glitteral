@@ -1,5 +1,3 @@
-# ASPIRATIONAL
-
 # http://en.wikipedia.org/w/index.php?title=Fizz_buzz&oldid=662465165#Other_uses
 
 :=λ modulo |a ^int n ^int| → ^int
