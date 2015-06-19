@@ -1,19 +1,20 @@
-:= glitteral_is_splendid Truth
+# := block_list_literal […]—
+#    "if"
+#    "this"
 
-:=λ first_plus_square_of_second |a ^int b ^int| → ^int
-   (+ a (⋅ b b))  # This is a comment!
+# := block_vector_literal |…|—
+#    "works"
+#    "then"
 
-:= my_list […]—
-   1
-   2
-   3
-   4
+:= block_dictionary_literal {…}—
+   "close issue #" 1;
 
-(println_container my_list)
+# for |i (range 0 2)|—
+#    (println (_ block_list_literal i))
 
-when glitteral_is_splendid—
-   if (= (first_plus_square_of_second 1 2) 5)—
-      _:= my_list 0 10
+# for |i (range 2)|—
+#    (println (_ block_vector_literal i))
 
-for |i my_list|—
-   (println i)
+:= key "close issue #"
+(println key)
+(println (_ block_dictionary_literal key))

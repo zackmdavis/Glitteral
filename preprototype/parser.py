@@ -501,6 +501,7 @@ def parse_association(tokenstream):
     return Association(key, value)
 
 def parse_associative(tokenstream):
+    # TODO unify with `parse_sequential` as `parse_collection`
     open_delimiter = tokenstream.pop()
     if not (isinstance(open_delimiter, AssociativeDelimiter) and
             isinstance(open_delimiter, OpenDelimiter)):
@@ -512,8 +513,18 @@ def parse_associative(tokenstream):
     # elif isinstance(open_delimiter, ... uh, we need to call the '<' something)
     else:
         raise NotImplementedError("TODO: parse Glitteral hashtables")
-    associations = parse_rest(tokenstream,
-                              closer=closer, item_parser=parse_association)
+    next_token = tokenstream.peek()
+    if isinstance(next_token, Ellipsis):
+        _ellipsis = tokenstream.pop()
+        # TODO: error checking here, too
+        _close_block_signifier = tokenstream.pop()
+        _dash = tokenstream.pop()
+        _indent = parse_expression_expecting(tokenstream, being_instance=Indent)
+        associations = parse_rest(tokenstream,
+                                  closer=Dedent, item_parser=parse_association)
+    else:
+        associations = parse_rest(tokenstream,
+                                  closer=closer, item_parser=parse_association)
     return associative_class(associations)
 
 def parse_expression(tokenstream):

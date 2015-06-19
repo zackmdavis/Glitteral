@@ -58,17 +58,30 @@ for |i a|—
 
     def test_block_sequential_literals(self):
         sequential_types = (List, Vector)
+        item_specs = ((int, IntegerAtom,
+                       (1, 2, 3)),
+                      (lambda s: s.strip('"'), StringAtom,
+                       ('"Garnet"', '"Amethyst"', '"Pearl"')))
         for sequential_type in sequential_types:
-            source = """
+            for item_purifier, item_class, item_sequence in item_specs:
+                with self.subTest(sequential_type=sequential_type,
+                                  item_sequence=item_sequence):
+                    source = """
 {}…{}—
-   1
-   2
-   3
+   {}
+   {}
+   {}
 """.format(sequential_type.open_delimiter_character,
-           sequential_type.close_delimiter_character)
-            parsed = list(parse(lex(source)))
-            annotated = list(annotate(parsed))
-            sequential, = annotated
-            self.assertEqual(sequential_type, sequential.__class__)
-            self.assertEqual([IntegerAtom(i) for i in (1, 2, 3)],
-                             sequential.elements)
+           sequential_type.close_delimiter_character,
+           *item_sequence)
+                    parsed = list(parse(lex(source)))
+                    annotated = list(annotate(parsed))
+                    try:
+                        sequential, = annotated
+                    except:
+                        from pudb import set_trace as debug; debug()
+                    self.assertEqual(sequential_type, sequential.__class__)
+                    self.assertEqual(
+                        [item_class(item_purifier(i)) for i in item_sequence],
+                        sequential.elements
+                    )

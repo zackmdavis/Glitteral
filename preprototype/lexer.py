@@ -193,8 +193,8 @@ class Pipe(SequentialDelimiter, OpenDelimiter, CloseDelimiter):
         return Pipe
 
 class StringLiteral(Token):
-    prefix_recognizer = re.compile(r'"[^"]*$')
-    recognizer = re.compile(r'".*"$')
+    prefix_recognizer = re.compile(r'"[^"]*$(?!\n)')
+    recognizer = re.compile(r'".*"$(?!\n)')
 
 class InternLiteral(Token):
     prefix_recognizer = re.compile(r"'[^']*$(?!\n)")
