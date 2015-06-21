@@ -6,7 +6,7 @@
 
 := block_dictionary_literal {…}—
    "close issue #" 1;
-   "open another issue, numbered" 2;
+   "foo bar quux" 2;
 
 for |i (range 0 4)|—
    (println (_ block_list_literal i))

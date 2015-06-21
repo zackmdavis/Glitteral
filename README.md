@@ -4,6 +4,17 @@
 
 *sparkling, vague dreams of a future programming language*
 
+Glitteral is a speculative new programming language. Right now, the only implementation is the vastly incomplete speculative pre-prototype. It's written in Python 3.4 and makes executables by transpiling Glitteral source code into Rust source code, which is then handed off to `rustc`.
+
+Dependencies:
+
+ * [Python 3.4](https://www.python.org/downloads/)
+ * [Rust 1.0.0](http://www.rust-lang.org/install.html)
+
+Optional dependencies:
+
+ * [Invoke](http://www.pyinvoke.org/) to use the shortcuts defined in *tasks.py*.
+
 ### Actual demonstration
 
 ```
@@ -74,6 +85,9 @@ Void
 # by a dash and an indented block (three spaces per indentation),
 # whereas function calls are traditional s-expressions.  (Thanks to
 # Rory O'Kane for syntax suggestions.)
+#
+# Someday in the distant future, we can imagine supporting macros, and
+# having them use the indented-block syntax.
 
 # named function definitions
 :=λ name argument-container → return_type_specifier
