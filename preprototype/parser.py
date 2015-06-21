@@ -468,18 +468,30 @@ def parse_application(tokenstream):
                                "an identifier, got {}".format(first))
     return Application(first, rest)
 
-def parse_sequential(tokenstream):
+def parse_collection(tokenstream, *, item_parser=None):
     open_delimiter = tokenstream.pop()
-    if not (isinstance(open_delimiter, SequentialDelimiter) or
-            not isinstance(open_delimiter, OpenDelimiter)):
-        raise ParsingException("Expected an opening sequential delimiter ('[' "
-                               "or '|'), got {}".format(open_delimiter))
-    if isinstance(open_delimiter, OpenBracket):
-        sequential_class = List
-        closer = CloseBracket
-    elif isinstance(open_delimiter, Pipe):
-        sequential_class = Vector
-        closer = Pipe
+    if isinstance(open_delimiter, SequentialDelimiter):
+        item_parsing_kwargs = {}
+        if isinstance(open_delimiter, OpenBracket):
+            collection_class = List
+            closer = CloseBracket
+        elif isinstance(open_delimiter, Pipe):
+            collection_class = Vector
+            closer = Pipe
+    elif isinstance(open_delimiter, AssociativeDelimiter):
+        item_parsing_kwargs = {'item_parser': parse_association}
+        if isinstance(open_delimiter, OpenBrace):
+            collection_class = Dictionary
+            closer = CloseBrace
+        # elif isinstance(open_delimiter, ... uh, we need to call the
+        # '<' something)
+        else:
+            raise NotImplementedError("TODO: parse Glitteral hashtables")
+    else:
+        raise ParsingException(
+            "Expected a collection delimiter, got {}".format(
+                open_delimiter))
+
     next_token = tokenstream.peek()
     if isinstance(next_token, Ellipsis):
         _ellipsis = tokenstream.pop()
@@ -487,10 +499,13 @@ def parse_sequential(tokenstream):
         _close_block_signifier = tokenstream.pop()
         _dash = tokenstream.pop()
         _indent = parse_expression_expecting(tokenstream, being_instance=Indent)
-        elements = parse_rest(tokenstream, closer=Dedent)
+        items = parse_rest(tokenstream, closer=Dedent, **item_parsing_kwargs)
     else:
-        elements = parse_rest(tokenstream, closer=closer)
-    return sequential_class(elements)
+        items = parse_rest(tokenstream, closer=closer, **item_parsing_kwargs)
+    return collection_class(items)
+
+def parse_sequential(tokenstream):
+    return parse_collection(tokenstream)
 
 def parse_association(tokenstream):
     key = parse_expression(tokenstream)
@@ -501,31 +516,7 @@ def parse_association(tokenstream):
     return Association(key, value)
 
 def parse_associative(tokenstream):
-    # TODO unify with `parse_sequential` as `parse_collection`
-    open_delimiter = tokenstream.pop()
-    if not (isinstance(open_delimiter, AssociativeDelimiter) and
-            isinstance(open_delimiter, OpenDelimiter)):
-        raise ParsingException("Expected an opening associative delimiter ('{{' "
-                               "or '<'), got {}".format(open_delimiter))
-    if isinstance(open_delimiter, OpenBrace):
-        associative_class = Dictionary
-        closer = CloseBrace
-    # elif isinstance(open_delimiter, ... uh, we need to call the '<' something)
-    else:
-        raise NotImplementedError("TODO: parse Glitteral hashtables")
-    next_token = tokenstream.peek()
-    if isinstance(next_token, Ellipsis):
-        _ellipsis = tokenstream.pop()
-        # TODO: error checking here, too
-        _close_block_signifier = tokenstream.pop()
-        _dash = tokenstream.pop()
-        _indent = parse_expression_expecting(tokenstream, being_instance=Indent)
-        associations = parse_rest(tokenstream,
-                                  closer=Dedent, item_parser=parse_association)
-    else:
-        associations = parse_rest(tokenstream,
-                                  closer=closer, item_parser=parse_association)
-    return associative_class(associations)
+    return parse_collection(tokenstream, item_parser=parse_association)
 
 def parse_expression(tokenstream):
     leading_token = tokenstream.peek()
