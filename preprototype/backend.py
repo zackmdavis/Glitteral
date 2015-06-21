@@ -126,23 +126,25 @@ def generate_special_builtin_dispatched_application(application):
                 # parameters differently (wrapped up in an Argument)
                 isinstance(container, Argument) and
                 container.type_specifier.value[:2] == "^["):
-            return "list_get_subscript({}){}".format(
-                ', '.join(generate_expression(arg)
-                          for arg in application.arguments),
-                semicolon_if_statementlike(application)
-            )
+            underfunction = "list_get_subscript"
+        elif isinstance(container, Vector):
+            underfunction = "vector_get_subscript"
+            raise CodeGenerationException("TODO make vectors work")
         elif isinstance(container, Dictionary) or (
                 isinstance(container, Argument) and
                 container.type_specifier.value[:2] == "^{"):
-            return "str_int_dictionary_get_subscript({}){}".format(
-                ', '.join(generate_expression(arg)
-                          for arg in application.arguments),
-                semicolon_if_statementlike(application)
-            )
+            underfunction = "str_int_dictionary_get_subscript"
         else:
             raise CodeGenerationException("_ called with first argument {}, "
                                           "expected Container "
                                           "type".format(container))
+        return "{}({}){}".format(
+            underfunction,
+            ', '.join(generate_expression(arg)
+                      for arg in application.arguments),
+            semicolon_if_statementlike(application)
+        )
+
     elif (application.environment.get(application.function.value).value ==
           "comprehend"):
         # SCRAP: I'm losing hope that this is going to work at all, even in the

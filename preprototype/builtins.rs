@@ -39,7 +39,10 @@ fn parse_float(f: String) -> f64 {
 }
 
 // special
-fn list_get_subscript(container: &mut Vec<isize>, index: isize) -> isize {
+fn list_get_subscript<T: Copy>(container: &mut Vec<T>, index: isize) -> T {
+    container[index as usize]
+}
+fn vector_get_subscript<T: Copy>(container: &[T], index: isize) -> T {
     container[index as usize]
 }
 

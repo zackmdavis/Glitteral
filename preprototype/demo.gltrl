@@ -1,19 +1,15 @@
-# := block_list_literal […]—
-#    "if"
-#    "this"
-
-# := block_vector_literal |…|—
-#    "works"
-#    "then"
+:= block_list_literal […]—
+   "if"
+   "this"
+   "works,"
+   "then"
 
 := block_dictionary_literal {…}—
    "close issue #" 1;
+   "open another issue, numbered" 2;
 
-# for |i (range 0 2)|—
-#    (println (_ block_list_literal i))
-
-# for |i (range 2)|—
-#    (println (_ block_vector_literal i))
+for |i (range 0 4)|—
+   (println (_ block_list_literal i))
 
 := key "close issue #"
 (println key)
