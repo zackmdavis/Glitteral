@@ -54,54 +54,54 @@ class Keyword(Reserved):
     ...
 
 class If(Keyword):
-    recognizer = re.compile(r"if$(?!\n)")
+    recognizer = re.compile(r"if\Z")
 
 class When(Keyword):
-    recognizer = re.compile(r"when$(?!\n)")
+    recognizer = re.compile(r"when\Z")
 
 class For(Keyword):
-    recognizer = re.compile(r"for$(?!\n)")
+    recognizer = re.compile(r"for\Z")
 
 class While(Keyword):
-    recognizer = re.compile(r"while$(?!\n)")
+    recognizer = re.compile(r"while\Z")
 
 class Do(Keyword):
-    recognizer = re.compile(r"do$(?!\n)")
+    recognizer = re.compile(r"do\Z")
 
 class Lambda(Keyword):
-    recognizer = re.compile(r"λ$(?!\n)")
+    recognizer = re.compile(r"λ\Z")
 
 class Def(Keyword):
-    recognizer = re.compile(r":=$(?!\n)")
+    recognizer = re.compile(r":=\Z")
 
 class Deflambda(Keyword):
-    recognizer = re.compile(r":=λ$(?!\n)")
+    recognizer = re.compile(r":=λ\Z")
 
 class SubscriptDef(Keyword):
-    recognizer = re.compile(r"_:=$(?!\n)")
+    recognizer = re.compile(r"_:=\Z")
 
 
 class Dash(Reserved):
-    recognizer = re.compile(r"—$(?!\n)")
+    recognizer = re.compile(r"—\Z")
 
 class Arrow(Reserved):
-    recognizer = re.compile(r"→$(?!\n)")
+    recognizer = re.compile(r"→\Z")
 
 class Identifier(Token):
     # simplify regex-based distinguishing of numeric literals from
     # identifiers by preventing the latter from starting with a digit,
     # as simulated by a negative lookahead assertion
-    recognizer = re.compile("(?![0-9])[{0}][{0}]*$(?!\n)".format(
+    recognizer = re.compile("(?![0-9])[{0}][{0}]*\Z".format(
         IDENTIFIER_CHARS))
 
 class TypeSpecifier(Reserved):
-    prefix_recognizer = re.compile(r"\^\w*$(?!\n)")
+    prefix_recognizer = re.compile(r"\^\w*\Z")
 
 def type_specifier_class(type_name, type_specifier):
     return type(
         "{}Specifier".format(type_name),
         (TypeSpecifier,),
-        {'recognizer': re.compile(r"\^{}$(?!\n)".format(type_specifier))}
+        {'recognizer': re.compile(r"\^{}\Z".format(type_specifier))}
     )
 
 IntegerSpecifer = type_specifier_class("Integer", "int")
@@ -115,15 +115,15 @@ BooleanSpecifier = type_specifier_class("Boolean", "bool")
 # advance the project along other fronts
 class IntegerListSpecifier(TypeSpecifier):
     prefix_recognizer = re.compile(r"(\^\[$)|(\^\[i$)|(\^\[in$)|(\^\[int$)")
-    recognizer = re.compile(r"\^\[int]$(?!\n)")
+    recognizer = re.compile(r"\^\[int]\Z")
 
 class StringListSpecifier(TypeSpecifier):
     prefix_recognizer = re.compile(r"(\^\[$)|(\^\[s$)|(\^\[st$)|(\^\[str$)")
-    recognizer = re.compile(r"\^\[str]$(?!\n)")
+    recognizer = re.compile(r"\^\[str]\Z")
 
 
 class Ellipsis(Reserved):
-    recognizer = re.compile("…$(?!\n)")
+    recognizer = re.compile("…\Z")
 
 class Delimiter(Token):
     ...
@@ -141,77 +141,77 @@ class AssociativeDelimiter(Token):
     ...
 
 class OpenParenthesis(OpenDelimiter):
-    recognizer = re.compile(r"\($(?!\n)")
+    recognizer = re.compile(r"\(\Z")
 
     @property
     def opposite(self):
         return CloseParenthesis
 
 class CloseParenthesis(CloseDelimiter):
-    recognizer = re.compile(r"\)$(?!\n)")
+    recognizer = re.compile(r"\)\Z")
 
     @property
     def opposite(self):
         return OpenParenthesis
 
 class OpenBracket(SequentialDelimiter, OpenDelimiter):
-    recognizer = re.compile(r"\[$(?!\n)")
+    recognizer = re.compile(r"\[\Z")
 
     @property
     def opposite(self):
         return CloseBracket
 
 class CloseBracket(SequentialDelimiter, CloseDelimiter):
-    recognizer = re.compile(r"\]$(?!\n)")
+    recognizer = re.compile(r"\]\Z")
 
     @property
     def opposite(self):
         return OpenBracket
 
 class OpenBrace(AssociativeDelimiter, OpenDelimiter):
-    recognizer = re.compile(r"\{$(?!\n)")
+    recognizer = re.compile(r"\{\Z")
 
     @property
     def opposite(self):
         return CloseBrace
 
 class CloseBrace(AssociativeDelimiter, CloseDelimiter):
-    recognizer = re.compile(r"\}$(?!\n)")
+    recognizer = re.compile(r"\}\Z")
 
     @property
     def opposite(self):
         return OpenBrace
 
 class Semicolon(Token):
-    recognizer = re.compile(";$(?!\n)")
+    recognizer = re.compile(";\Z")
 
 class Pipe(SequentialDelimiter, OpenDelimiter, CloseDelimiter):
-    recognizer = re.compile(r"\|$(?!\n)")
+    recognizer = re.compile(r"\|\Z")
 
     @property
     def opposite(self):
         return Pipe
 
 class StringLiteral(Token):
-    prefix_recognizer = re.compile(r'"[^"]*$(?!\n)')
-    recognizer = re.compile(r'".*"$(?!\n)')
+    prefix_recognizer = re.compile(r'"[^"]*\Z')
+    recognizer = re.compile(r'".*"\Z')
 
 class InternLiteral(Token):
-    prefix_recognizer = re.compile(r"'[^']*$(?!\n)")
-    recognizer = re.compile(r"'.*'$(?!\n)")
+    prefix_recognizer = re.compile(r"'[^']*\Z")
+    recognizer = re.compile(r"'.*'\Z")
 
 class IntegerLiteral(Token):
-    recognizer = re.compile(r"\d+$(?!\n)")
+    recognizer = re.compile(r"\d+\Z")
 
 class FloatLiteral(Token):
-    prefix_recognizer = re.compile("[0-9.]$(?!\n)")
-    recognizer = re.compile(r"(\d+\.\d*$(?!\n))|(\.\d+$(?!\n))")
+    prefix_recognizer = re.compile("[0-9.]\Z")
+    recognizer = re.compile(r"(\d+\.\d*\Z)|(\.\d+\Z)")
 
 class BooleanLiteral(Reserved):
-    recognizer = re.compile(r"(Truth$(?!\n))|(Falsity$(?!\n))")
+    recognizer = re.compile(r"(Truth\Z)|(Falsity\Z)")
 
 class VoidLiteral(Reserved):
-    recognizer = re.compile(r"Void$(?!\n)")
+    recognizer = re.compile(r"Void\Z")
 
 
 # Some might argue that our current handling of indentation tokens is
@@ -225,7 +225,7 @@ class VoidLiteral(Reserved):
 # the chomp-and-resynchronization phase.
 
 class AbstractDent(Token):
-    prefix_recognizer = re.compile(r"\n *$(?!\n)", re.MULTILINE)
+    prefix_recognizer = re.compile(r"\n *\Z", re.MULTILINE)
 
     def __init__(self, *args):
         if not args:
@@ -245,7 +245,7 @@ class Indent(AbstractDent):
     @classmethod
     def recognizer_from_lexer_context(self, lexer_context):
         if lexer_context.undelimited():
-            return re.compile(r"\n(   ){%d,}$(?!\n)" %
+            return re.compile(r"\n(   ){%d,}\Z" %
                                (lexer_context.indentation_level + 1),
                                re.MULTILINE)
         else:
@@ -259,7 +259,7 @@ class Dedent(AbstractDent):
     def recognizer_from_lexer_context(self, lexer_context):
         if lexer_context.undelimited():
             if lexer_context.indentation_level:
-                return re.compile(r"\n(   ){,%d}$(?!\n)" %
+                return re.compile(r"\n(   ){,%d}\Z" %
                                   (lexer_context.indentation_level - 1),
                                   re.MULTILINE)
             else:
@@ -288,11 +288,11 @@ class Commentary(Token):
         # it's not meant for us; don't even bother reading it
         self.representation = ''
 
-    recognizer = re.compile(r"#.*$(?!\n)")
+    recognizer = re.compile(r"#.*\Z")
 
 
 class EndOfFile(Token):
-    recognizer = re.compile(r"█$(?!\n)")
+    recognizer = re.compile(r"█\Z")
 
 
 class TokenizingException(ValueError):
